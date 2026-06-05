@@ -112,7 +112,7 @@
                         <h3>Join Telegram Channel</h3>
                         <p>Direct Visit Channel</p>
                     </div>
-                    <a href="https://t.me/cricketprofithub_bot" target="_blank" class="btn btn-primary">Join Now</a>
+                    <a href="https://t.me/+DekQ2nzaz6FjZDZl" target="_blank" class="btn btn-primary">Join Now</a>
                 </div>
             </div>
 
@@ -242,8 +242,15 @@
         
         let userData = localStorage.getItem('user_' + mobile);
         if(!userData) {
+            // Agar naya user h, toh register karo
             const newUser = { mobile: mobile, password: password, balance: 50, lastPlayed: null, lastFootballPlayed: null, statements: [] };
             localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
+        } else {
+            // Agar purana user h, toh password security check karo
+            const existingUser = JSON.parse(userData);
+            if(existingUser.password !== password) {
+                return alert("Incorrect Secret PIN! Please enter correct PIN.");
+            }
         }
         currentUser = mobile;
         localStorage.setItem('logged_in_user', mobile);
