@@ -110,9 +110,9 @@
                 <div class="task-header" style="margin-bottom: 0;">
                     <div class="task-info">
                         <h3>Join Telegram Channel</h3>
-                        <p>Direct Visit Channel</p>
+                        <p style="color: #4f46e5;">+40 Coins (Direct Visit Channel)</p>
                     </div>
-                    <a href="https://t.me/+DekQ2nzaz6FjZDZl" target="_blank" class="btn btn-primary">Join Now</a>
+                    <a href="https://t.me/+DekQ2nzaz6FjZDZl" target="_blank" onclick="claimTelegramCoins()" class="btn btn-primary" id="tg-btn">Join Now</a>
                 </div>
             </div>
 
@@ -242,11 +242,9 @@
         
         let userData = localStorage.getItem('user_' + mobile);
         if(!userData) {
-            // Agar naya user h, toh register karo
-            const newUser = { mobile: mobile, password: password, balance: 50, lastPlayed: null, lastFootballPlayed: null, statements: [] };
+            const newUser = { mobile: mobile, password: password, balance: 50, lastPlayed: null, lastFootballPlayed: null, lastTelegramJoined: null, statements: [] };
             localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
         } else {
-            // Agar purana user h, toh password security check karo
             const existingUser = JSON.parse(userData);
             if(existingUser.password !== password) {
                 return alert("Incorrect Secret PIN! Please enter correct PIN.");
@@ -281,6 +279,24 @@
             document.getElementById('play-football-btn').disabled = true;
             document.getElementById('play-football-btn').innerText = "Played Today";
         }
+        if(userData.lastTelegramJoined === "done") {
+            document.getElementById('tg-btn').removeAttribute('href');
+            document.getElementById('tg-btn').style.background = '#10b981';
+            document.getElementById('tg-btn').innerText = "Joined ✓";
+            document.getElementById('tg-btn').style.pointerEvents = 'none';
+        }
+    }
+
+    function claimTelegramCoins() {
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        if(userData.lastTelegramJoined !== "done") {
+            userData.balance += 40;
+            userData.lastTelegramJoined = "done";
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+            alert("🎉 Telegram Channel Join karne ke +40 Coins mile!");
+            setTimeout(() => { location.reload(); }, 500);
+        }
     }
 
     function switchTab(tabName) {
@@ -309,6 +325,8 @@
 
             for(let i = history.length - 1; i >= 0; i--) {
                 let tx = history[i];
+                // Dynamic status display logic added here
+                let statusColor = tx.status === "Success" ? "#10b981" : (tx.status === "Processing" ? "#3b82f6" : "#f59e0b");
                 listContainer.innerHTML += `
                     <div class="statement-item">
                         <div style="display:flex; justify-content:space-between; font-weight:bold;">
@@ -316,7 +334,7 @@
                             <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
                         </div>
                         <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (${tx.accNum})</div>
-                        <div style="font-size:11px; color:#10b981; font-weight:500;">Status: Pending</div>
+                        <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${tx.status || 'Pending'}</div>
                     </div>
                 `;
             }
@@ -349,21 +367,23 @@
             amount: amount
         };
 
+        // Network mode changed to allow strict response checks
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         })
         .then(() => {
             userData.balance -= amount;
             
             if(!userData.statements) userData.statements = [];
+            // Added dynamic status field to localStorage object
             userData.statements.push({
                 amount: amount,
                 bankName: bankName,
                 accNum: accountNumber.slice(-4).padStart(accountNumber.length, '*'), 
-                date: new Date().toLocaleString()
+                date: new Date().toLocaleString(),
+                status: "Pending"
             });
 
             localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
@@ -371,7 +391,7 @@
             location.reload();
         })
         .catch(err => {
-            alert("Network Error!");
+            alert("Network Error or Google Script Issue!");
             submitBtn.disabled = false;
             submitBtn.innerText = "Submit Settlement";
         });
@@ -427,23 +447,4 @@
 
     // --- FOOTBALL ENGINE ---
     function startFootballGame() { footballScore = 0; document.getElementById('play-football-btn').style.display = 'none'; document.getElementById('football-pitch').style.display = 'block'; keeperInterval = setInterval(moveKeeper, 700); }
-    function moveKeeper() { const keeper = document.getElementById('goalkeeper'); keeper.style.left = [20, 35, 50, 65, 80][Math.floor(Math.random() * 5)] + "%"; }
-    function shootFootball(playerTarget) {
-        if(isBallMoving || footballScore >= 5) return; isBallMoving = true;
-        const ball = document.getElementById('soccer-ball'); const keeper = document.getElementById('goalkeeper'); const line = document.getElementById('kick-line');
-        let angle = playerTarget === 20 ? -30 : (playerTarget === 80 ? 30 : 0);
-        line.style.opacity = '1'; line.style.height = '140px'; line.style.transform = `rotate(${angle}deg)`;
-        setTimeout(() => {
-            line.style.opacity = '0'; line.style.height = '0px'; ball.style.bottom = '160px'; ball.style.left = playerTarget + '%'; ball.style.transform = 'translateX(-50%) scale(0.55)';
-            setTimeout(() => {
-                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { alert("Saved!"); } 
-                else { footballScore++; document.getElementById('football-score').innerText = footballScore; if(footballScore >= 5) { clearInterval(keeperInterval); document.getElementById('claim-football-btn').style.display = 'block'; const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.lastFootballPlayed = new Date().toDateString(); localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); } }
-                setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
-            }, 300);
-        }, 200);
-    }
-    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 20; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
-    function logout() { localStorage.removeItem('logged_in_user'); location.reload(); }
-</script>
-</body>
-</html>
+    function moveKeeper() { const keeper = document.getElementById('
