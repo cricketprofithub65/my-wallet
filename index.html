@@ -43,6 +43,8 @@
         .profile-label { color: #6b7280; font-weight: 500; }
         .profile-value { color: #1f2937; font-weight: 600; }
         .statement-item { background: #fff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+        
+        .share-box { background: #e0e7ff; color: #4338ca; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; word-break: break-all; margin-top: 10px; border: 1px dashed #6366f1; }
     </style>
 </head>
 <body>
@@ -83,6 +85,24 @@
                     <button id="tg-join-btn" onclick="claimTelegramCoins()" class="btn btn-primary">Join Now</button>
                 </div>
             </div>
+            <div class="task-card" style="margin-top: 15px;">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Daily Reward Check-in</h3>
+                        <p style="color: #10b981;">+10 Coins</p>
+                    </div>
+                    <button id="daily-btn" onclick="claimDailyReward()" class="btn btn-primary" style="background:#10b981;">Claim</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="invite-section" class="content-section">
+            <div class="task-card">
+                <h3 style="font-size: 16px; margin-bottom: 10px; color: #1f2937;">🔑 Refer & Earn</h3>
+                <p style="font-size: 13px; color: #4b5563; line-height: 1.5;">Apne dosto ko invite karein aur har successful registration par payein <span style="color:#10b981; font-weight:bold;">+50 Coins</span> turant!</p>
+                <div class="share-box" id="refer-link-box">Loading dynamic refer link...</div>
+                <button onclick="copyReferLink()" class="btn btn-success" style="margin-top: 12px; background:#4f46e5;">Copy Refer Link</button>
+            </div>
         </div>
 
         <div id="withdraw-section" class="content-section">
@@ -117,6 +137,7 @@
 
         <div class="bottom-nav">
             <div class="nav-item active" id="nav-tasks" onclick="switchTab('tasks')"><span class="icon">📋</span><div>Tasks</div></div>
+            <div class="nav-item" id="nav-invite" onclick="switchTab('invite')"><span class="icon">🎁</span><div>Invite</div></div>
             <div class="nav-item" id="nav-withdraw" onclick="switchTab('withdraw')"><span class="icon">🏦</span><div>Bank</div></div>
             <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span class="icon">👤</span><div>Profile</div></div>
         </div>
@@ -124,8 +145,8 @@
 </div>
 
 <script>
-    // 📢 AAPKA NAYA LIVE SCRIPT URL AUTOMATICALLY INTEGRATED
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8gww_gl3cfQpeXHEn2z1sM92Cg2oa_Ezln2Ld9_uZVHw0NvMjbHsjvwjo8r_9E8YLLA/exec";
+    // 📢 AAPKA LIVE URL PERFECTLY LINKED
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzb5i20JhavgjIiwpfEd8IDlTsHfvSr9sAsm5ikA4vBgTMMlDXHZq_kC8Fp7fPhYHEd/exec";
     let currentUser = localStorage.getItem('logged_in_user') || null;
 
     window.onload = function() {
@@ -144,9 +165,8 @@
         const password = document.getElementById('auth-password').value.trim();
         
         authBtn.disabled = true;
-        authBtn.innerText = "Connecting database...";
+        authBtn.innerText = "Syncing User Database...";
 
-        // Explicit post body setup for register
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
@@ -155,11 +175,10 @@
         })
         .then(() => {
             localStorage.setItem('logged_in_user', mobile);
-            alert("Account Verified Successfully!");
+            alert("Account Linked Successfully!");
             location.reload();
         })
         .catch(() => {
-            // Safe local backup trigger
             localStorage.setItem('logged_in_user', mobile);
             location.reload();
         });
@@ -170,6 +189,11 @@
         document.getElementById('main-app').style.display = 'block';
         document.getElementById('display-user').innerText = currentUser;
         document.getElementById('prof-mobile').innerText = currentUser;
+        
+        // Setup Refer link dynamically based on the domain URL
+        const currentDomain = window.location.href.split('?')[0];
+        document.getElementById('refer-link-box').innerText = `${currentDomain}?ref=${currentUser}`;
+        
         updateLiveBalance();
     }
 
@@ -199,18 +223,17 @@
             box.style.display = 'none';
         } else {
             box.style.display = 'block';
-            listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#6b7280;">Fetching records...</p>';
+            listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#6b7280;">Loading history & checking refunds...</p>';
             
             fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
             .then(res => res.json())
             .then(history => {
                 listContainer.innerHTML = '';
                 if(!history || history.length === 0) {
-                    listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#9ca3af;">No withdrawals yet.</p>';
+                    listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#9ca3af;">No transaction logs.</p>';
                     return;
                 }
 
-                // Reverse sequence display mapping loop
                 history.reverse().forEach(tx => {
                     let statusText = tx.status ? String(tx.status).trim() : "Pending";
                     let statusColor = "#f59e0b"; // Yellow
@@ -221,13 +244,15 @@
                         statusColor = "#ef4444"; // Red
                     }
 
+                    // Masking Account Number Safely (last 4 digits matching WhatsApp SS style)
                     let cleanAcc = tx.accountNumber ? String(tx.accountNumber).slice(-4) : "0000";
+                    let displayDate = tx.date ? tx.date.split(',')[0] : 'Today';
 
                     listContainer.innerHTML += `
                         <div class="statement-item" style="border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; background:#fff;">
                             <div style="display:flex; justify-content:space-between; font-weight:bold;">
                                 <span style="color:#ef4444;">-${tx.amount} Coins</span>
-                                <span style="color:#6b7280; font-size:11px;">${tx.date ? tx.date.split(',')[0] : ''}</span>
+                                <span style="color:#6b7280; font-size:11px;">${displayDate}</span>
                             </div>
                             <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName || 'Bank'} (****${cleanAcc})</div>
                             <div style="font-size:11px; color:${statusColor}; font-weight:700; margin-top:2px; text-transform:uppercase;">Status: ${statusText}</div>
@@ -235,7 +260,7 @@
                     `;
                 });
                 
-                // CRITICAL AUTO-SYNC LOGIC: Jaise hi statements load honge, balance automatic sheet se fresh refresh ho jayega!
+                // Real-time automatic balance refresh after script check!
                 updateLiveBalance();
             });
         }
@@ -247,10 +272,10 @@
         const amount = parseInt(document.getElementById('withdraw-amount').value);
         const currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
 
-        if(currentBal < amount) return alert("Insufficient balance in your wallet!");
+        if(currentBal < amount) return alert("Wallet Balance is too low!");
 
         submitBtn.disabled = true;
-        submitBtn.innerText = "Submitting to sheet...";
+        submitBtn.innerText = "Processing settlement...";
 
         const payload = {
             action: "withdraw",
@@ -276,7 +301,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
             }).then(() => {
-                alert("Settlement Logged Successfully!");
+                alert("Withdrawal Logged in Spreadsheet!");
                 location.reload();
             });
         });
@@ -284,7 +309,6 @@
 
     function claimTelegramCoins() {
         window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
-        
         let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
         let newBal = currentBal + 30;
 
@@ -294,8 +318,30 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
         }).then(() => {
-            alert("🎉 +30 Coins successfully added to your wallet!");
+            alert("🎉 +30 Coins Added Successfully!");
             location.reload();
+        });
+    }
+
+    function claimDailyReward() {
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + 10;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            alert("🎉 Daily Reward check-in successful (+10 Coins)!");
+            location.reload();
+        });
+    }
+
+    function copyReferLink() {
+        const linkText = document.getElementById('refer-link-box').innerText;
+        navigator.clipboard.writeText(linkText).then(() => {
+            alert("Refer link copied to clipboard!");
         });
     }
 
