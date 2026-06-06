@@ -130,11 +130,11 @@
                 <div class="task-header">
                     <div class="task-info">
                         <h3>Daily Live Cricket Match</h3>
-                        <p style="color: #4f46e5;">+40 Coins (Target: 20 Runs)</p>
+                        <p style="color: #4f46e5;" id="cricket-reward-text">+5 to 10 Coins (Target: 20 Runs)</p>
                     </div>
                     <button class="btn btn-primary" id="play-sport-btn" onclick="startCricketGame()">Play Match</button>
                 </div>
-                <p id="sport-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Pehle Slow ball aayegi, runs badhne par Fast hoti jayegi. 2 Wickets hain!</p>
+                <p id="sport-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Pehle Slow ball aayegi, runs badhne par Fast hoti jayegi. 2 Wickets hain! (Daily 2 Chances)</p>
                 
                 <div class="game-pitch" id="game-pitch" onclick="swingBat()">
                     <div style="position: absolute; top: 8px; left: 12px; color: white; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; z-index: 30; display: flex; gap: 15px;">
@@ -148,18 +148,18 @@
                     <div class="batsman-container" id="batsman"><div class="batsman-body"><div class="batsman-head"></div><div class="batsman-bat" id="bat"></div></div></div>
                     <div class="live-ball" id="live-ball"></div>
                 </div>
-                <button class="btn btn-success" id="claim-sport-btn" onclick="claimSportCoins()" style="display: none; width: 100%;">Claim 40 Coins</button>
+                <button class="btn btn-success" id="claim-sport-btn" onclick="claimSportCoins()" style="display: none; width: 100%;">Claim Coins</button>
             </div>
 
             <div class="task-card" id="football-task-card">
                 <div class="task-header">
                     <div class="task-info">
                         <h3>Football Penalty Kick</h3>
-                        <p style="color: #10b981;">+20 Coins (Target: 5 Goals)</p>
+                        <p style="color: #10b981;" id="football-reward-text">+5 to 10 Coins (Target: 5 Goals)</p>
                     </div>
                     <button class="btn btn-primary" id="play-football-btn" onclick="startFootballGame()">Play Football</button>
                 </div>
-                <p id="football-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Khali Target Box par click karein. Ball real line ke raste wahi shoot hogi!</p>
+                <p id="football-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Khali Target Box par click karein. Ball real line ke raste wahi shoot hogi! (Daily 2 Chances)</p>
                 
                 <div class="football-pitch" id="football-pitch">
                     <div style="position: absolute; top: 15px; left: 15px; color: white; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; z-index: 30;">
@@ -173,7 +173,7 @@
                     <div class="kick-line" id="kick-line"></div>
                     <div class="soccer-ball" id="soccer-ball">⚽</div>
                 </div>
-                <button class="btn btn-success" id="claim-football-btn" onclick="claimFootballCoins()" style="display: none; width: 100%;">Claim 20 Coins</button>
+                <button class="btn btn-success" id="claim-football-btn" onclick="claimFootballCoins()" style="display: none; width: 100%;">Claim Coins</button>
             </div>
         </div>
 
@@ -230,12 +230,13 @@
 </div>
 
 <script>
-    // AAPKA NAYA GOOGLE SCRIPT URL YAHAN ADD HO GAYA HAI[cite: 2]
+    // AAPKA NAYA GOOGLE SCRIPT URL YAHAN ADD HO GAYA HAI
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLrWvFk1UsKcEMQwIIfQkZvkP2Xqkdks73rlJngAXvSzYVjsEagZ68BoJxLkUoExeF-g/exec";
     
     let currentUser = localStorage.getItem('logged_in_user') || null;
     let score = 0, wickets = 0, ballTimer, isBallFlying = false, ballPositionTop = 30, ballScale = 0.5, isBatSwung = false, currentBallSpeed = 30;
     let footballScore = 0, isBallMoving = false, keeperInterval;
+    let generatedReward = 0; // Random reward store karne ke liye variable
 
     window.onload = function() {
         if(currentUser) { showMainApp(); } 
@@ -271,7 +272,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false, redeemedCodes: [], statements: [] };
+                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, cricketChances: 0, footballChances: 0, tgJoined: false, redeemedCodes: [], statements: [] };
                 localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
 
                 // Referral Link Check
@@ -384,11 +385,22 @@
         const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
         if(!userData) return;
         const today = new Date().toDateString();
-        if(userData.lastPlayed === today) {
+        
+        // Date reset system for chances
+        if(userData.lastPlayed !== today) {
+            userData.cricketChances = 0;
+        }
+        if(userData.lastFootballPlayed !== today) {
+            userData.footballChances = 0;
+        }
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+        // Sports Game Limits (2 chances per day)
+        if(userData.lastPlayed === today && userData.cricketChances >= 2) {
             document.getElementById('play-sport-btn').disabled = true;
             document.getElementById('play-sport-btn').innerText = "Played Today";
         }
-        if(userData.lastFootballPlayed === today) {
+        if(userData.lastFootballPlayed === today && userData.footballChances >= 2) {
             document.getElementById('play-football-btn').disabled = true;
             document.getElementById('play-football-btn').innerText = "Played Today";
         }
@@ -532,12 +544,34 @@
     function swingBat() { if(!isBallFlying || isBatSwung) return; isBatSwung = true; document.getElementById('batsman').classList.add('swinging'); setTimeout(() => document.getElementById('batsman').classList.remove('swinging'), 150); }
     function endGame(isWon) {
         const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
-        userData.lastPlayed = new Date().toDateString();
+        const today = new Date().toDateString();
+        
+        if(userData.lastPlayed !== today) {
+            userData.lastPlayed = today;
+            userData.cricketChances = 1;
+        } else {
+            userData.cricketChances = (userData.cricketChances || 0) + 1;
+        }
         localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
-        if(isWon) { document.getElementById('game-pitch').style.pointerEvents = 'none'; document.getElementById('claim-sport-btn').style.display = 'block'; } 
-        else { alert("ALL OUT!"); location.reload(); }
+        
+        if(isWon) { 
+            generatedReward = Math.floor(Math.random() * 6) + 5; // Generates 5 to 10
+            document.getElementById('game-pitch').style.pointerEvents = 'none'; 
+            const claimBtn = document.getElementById('claim-sport-btn');
+            claimBtn.innerText = `Claim ${generatedReward} Coins`;
+            claimBtn.style.display = 'block'; 
+        } 
+        else { 
+            alert(`ALL OUT! Chance ${userData.cricketChances}/2 used.`); 
+            location.reload(); 
+        }
     }
-    function claimSportCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 40; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+    function claimSportCoins() { 
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+        userData.balance += generatedReward; 
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+        location.reload(); 
+    }
 
     // --- FOOTBALL ENGINE ---
     function startFootballGame() { footballScore = 0; document.getElementById('play-football-btn').style.display = 'none'; document.getElementById('football-pitch').style.display = 'block'; keeperInterval = setInterval(moveKeeper, 700); }
@@ -550,13 +584,37 @@
         setTimeout(() => {
             line.style.opacity = '0'; line.style.height = '0px'; ball.style.bottom = '160px'; ball.style.left = playerTarget + '%'; ball.style.transform = 'translateX(-50%) scale(0.55)';
             setTimeout(() => {
-                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { alert("Saved!"); } 
-                else { footballScore++; document.getElementById('football-score').innerText = footballScore; if(footballScore >= 5) { clearInterval(keeperInterval); document.getElementById('claim-football-btn').style.display = 'block'; const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.lastFootballPlayed = new Date().toDateString(); localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); } }
-                setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { 
+                    alert("Saved!"); 
+                    // Counter update on save if required, but following structure it resets on 5 goals.
+                    setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                } 
+                else { 
+                    footballScore++; 
+                    document.getElementById('football-score').innerText = footballScore; 
+                    if(footballScore >= 5) { 
+                        clearInterval(keeperInterval); 
+                        generatedReward = Math.floor(Math.random() * 6) + 5; // Generates 5 to 10
+                        const claimFbBtn = document.getElementById('claim-football-btn');
+                        claimFbBtn.innerText = `Claim ${generatedReward} Coins`;
+                        claimFbBtn.style.display = 'block'; 
+                        
+                        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+                        const today = new Date().toDateString();
+                        if(userData.lastFootballPlayed !== today) {
+                            userData.lastFootballPlayed = today;
+                            userData.footballChances = 1;
+                        } else {
+                            userData.footballChances = (userData.footballChances || 0) + 1;
+                        }
+                        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+                    } 
+                    setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                }
             }, 300);
         }, 200);
     }
-    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 20; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += generatedReward; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
     function logout() { localStorage.removeItem('logged_in_user'); location.reload(); }
 </script>
 
