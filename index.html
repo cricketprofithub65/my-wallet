@@ -86,7 +86,6 @@
 
         <!-- Section 1: Tasks -->
         <div id="tasks-section" class="content-section active">
-            <!-- Normal Rewards -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -106,10 +105,9 @@
                 </div>
             </div>
 
-            <!-- Sports Arena Tasks (Daily 1 Time) -->
+            <!-- Sports Arena Tasks -->
             <div class="section-title">🎮 Sports Arena Tasks (Daily 1 Time)</div>
 
-            <!-- Task 1: Cricket -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -120,7 +118,6 @@
                 </div>
             </div>
 
-            <!-- Task 2: Football -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -131,7 +128,6 @@
                 </div>
             </div>
 
-            <!-- Task 3: Gaming -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -142,7 +138,6 @@
                 </div>
             </div>
 
-            <!-- Task 4: Ludo -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -153,7 +148,6 @@
                 </div>
             </div>
 
-            <!-- Task 5: Squash -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -240,7 +234,7 @@
         }
     };
 
-    // 🔒 FIXED LOGIN & USER PAGE INTERACTION
+    // 🔒 FIXED LOGIN HANDLER - SPREADSHEET PASSWORDS ACCESSED CORRECTLY
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -252,14 +246,16 @@
         authBtn.disabled = true;
         authBtn.innerText = "Checking Credentials...";
 
-        fetch(`${GOOGLE_SCRIPT_URL}?action=loginCheck&mobile=${mobile}&password=${password}`)
+        // Dono string parameters ko URL query ke sath properly send kar rhe h
+        fetch(`${GOOGLE_SCRIPT_URL}?action=loginCheck&mobile=${encodeURIComponent(mobile)}&password=${encodeURIComponent(password)}`)
         .then(res => res.json())
         .then(response => {
+            // Check condition strict se flexible kiya taaki response verification miss na ho
             if (response.status === "success" || response.message === "Login Successful" || response.message === "Registration Successful") {
                 localStorage.setItem('logged_in_user', mobile);
                 currentUser = mobile;
                 alert("Access Granted! Sync Successful.");
-                showMainApp(); // 🚀 FIX: Window reload ke bina seedhe Dashboard par bhejega
+                showMainApp(); // bina reload direct UI update
             } else {
                 alert("❌ Auth Error: " + (response.message || "Invalid Secret PIN or Mobile!"));
                 authBtn.disabled = false;
@@ -267,7 +263,7 @@
             }
         })
         .catch(() => {
-            // Register Backup System
+            // Backup Flow - Register system check
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -276,7 +272,7 @@
             }).then(() => {
                 localStorage.setItem('logged_in_user', mobile);
                 currentUser = mobile;
-                showMainApp(); // 🚀 FIX: Backup flow ke liye bhi seedhe dashboard display
+                showMainApp();
             }).catch(() => {
                 alert("Server Connection Issue. Please check Web App Deployment!");
                 authBtn.disabled = false;
@@ -285,7 +281,7 @@
         });
     }
 
-    // 🛠️ FORGET PASSWORD ACTION
+    // 🛠️ FORGET PASSWORD LINK
     function handleForgetPassword(e) {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         alert("🔒 Security Prompt:\n\nApna PIN reset karwane ke liye kripya hamare Telegram Support Channel par contact karein aur apna registered mobile number bhejey.");
@@ -293,7 +289,7 @@
         return false;
     }
 
-    // 🚀 SHOW DASHBOARD (USER PAGE)
+    // 🚀 SHOW MAIN USER DASHBOARD
     function showMainApp() {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
@@ -306,7 +302,7 @@
         updateLiveBalance();
     }
 
-    // Live Balance
+    // Live Balance Update
     function updateLiveBalance() {
         if (!currentUser) return;
         fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
@@ -323,7 +319,7 @@
         });
     }
 
-    // Sports Arena 1 Day Lock
+    // Sports Arena Logic
     function claimSportReward(sportName, coinsReward) {
         const todayDate = new Date().toDateString();
         const storageKey = `claimed_sport_${sportName}_${currentUser}`;
@@ -530,7 +526,6 @@
         });
     }
 
-    document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
     function logout() {
         localStorage.removeItem('logged_in_user');
         currentUser = null;
