@@ -222,7 +222,8 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxm2LVnM9ebtj1pluyl7924I408p_MSLzZXHCtnAzANwnrbogiiTp4VBfGN93ulYNeKA/exec";
+    // 🔴 AAPKA NAYA URL YAHAN SET KAR DIYA GAYA HAI
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIVADgT5-lXYo52DSjO5VYXk-PmPk1tmMdQEpOalhaAy__mmcvB-I35x2R6PayReMolA/exec";
     let currentUser = localStorage.getItem('logged_in_user') || null;
 
     window.onload = function() {
@@ -526,6 +527,7 @@
         });
     }
 
+    // Secure Sign Out
     function logout() {
         localStorage.removeItem('logged_in_user');
         currentUser = null;
