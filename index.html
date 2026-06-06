@@ -91,7 +91,7 @@
                 <label>Secret PIN</label>
                 <input type="password" id="auth-password" placeholder="Enter secret PIN" required>
             </div>
-            <button type="submit" class="btn btn-success">Login / Register</button>
+            <button type="submit" id="auth-submit-btn" class="btn btn-success">Login / Register</button>
         </form>
     </div>
 
@@ -220,7 +220,8 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyme42nQIhxmm56Ya1mB2incrUH-h9p_lCr5yYFZI-053VCM3TcPS3nKeXeDG4NK1na/exec";
+    // AAPKA DEPLOYED WEB APP URL AUTOMATIC SET KAR DIYA HAI
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqaYtltuGzqfAIisops6_NC7fFjmJSl7BAo7QAT_j0i01kBWP7EsJjRV1o0Y5Fndlg-w/exec";
     
     let currentUser = localStorage.getItem('logged_in_user') || null;
     let score = 0, wickets = 0, ballTimer, isBallFlying = false, ballPositionTop = 30, ballScale = 0.5, isBatSwung = false, currentBallSpeed = 30;
@@ -236,37 +237,65 @@
 
     function handleAuth(event) {
         event.preventDefault();
+        const authBtn = document.getElementById('auth-submit-btn');
         const mobile = document.getElementById('auth-mobile').value.trim();
         const password = document.getElementById('auth-password').value.trim();
         if(!mobile || !password) return alert("Please fill all fields!");
         
         let userData = localStorage.getItem('user_' + mobile);
         if(!userData) {
-            // Naye user ka primary balance 0 hoga (jo register karega use coin nahi milega)
-            const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false, statements: [] };
-            localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
+            authBtn.disabled = true;
+            authBtn.innerText = "Registering on Sheet...";
 
-            // URL check karein ki kya user kisi ke referral link se aaya h
-            const urlParams = new URLSearchParams(window.location.search);
-            const referrerMobile = urlParams.get('ref');
-            
-            if(referrerMobile && referrerMobile !== mobile) {
-                let referrerData = localStorage.getItem('user_' + referrerMobile);
-                if(referrerData) {
-                    let referrer = JSON.parse(referrerData);
-                    referrer.balance = (referrer.balance || 0) + 50; // Jo invite karega use 50 coin milenge
-                    localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
+            // Naye user ka data Google Sheet 'Users' me bhej rahe hain
+            const payload = {
+                action: "register",
+                mobile: mobile,
+                password: password
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false, statements: [] };
+                localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
+
+                // Referral Link Check
+                const urlParams = new URLSearchParams(window.location.search);
+                const referrerMobile = urlParams.get('ref');
+                
+                if(referrerMobile && referrerMobile !== mobile) {
+                    let referrerData = localStorage.getItem('user_' + referrerMobile);
+                    if(referrerData) {
+                        let referrer = JSON.parse(referrerData);
+                        referrer.balance = (referrer.balance || 0) + 50; 
+                        localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
+                    }
                 }
-            }
+
+                currentUser = mobile;
+                localStorage.setItem('logged_in_user', mobile);
+                showMainApp();
+            })
+            .catch(err => {
+                alert("Sheet Connection Error!");
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            });
+
         } else {
             const existingUser = JSON.parse(userData);
             if(existingUser.password !== password) {
                 return alert("Incorrect Secret PIN! Please enter correct PIN.");
             }
+            currentUser = mobile;
+            localStorage.setItem('logged_in_user', mobile);
+            showMainApp();
         }
-        currentUser = mobile;
-        localStorage.setItem('logged_in_user', mobile);
-        showMainApp();
     }
 
     function showMainApp() {
@@ -299,10 +328,8 @@
             return;
         }
         
-        // Telegram channel open karega
         window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
         
-        // User ko 30 Coins milenge join karne par
         userData.balance = (userData.balance || 0) + 30;
         userData.tgJoined = true;
         localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
@@ -332,42 +359,50 @@
         document.getElementById('nav-' + tabName).classList.add('active');
     }
 
+    // SHEET SE REAL-TIME STATUS CHECKS (GET REQUEST)
     function toggleStatement() {
         const box = document.getElementById('statement-box');
         const listContainer = document.getElementById('statement-list');
-        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)) || {};
-        const history = userData.statements || [];
 
         if(box.style.display === 'block') {
             box.style.display = 'none';
         } else {
             box.style.display = 'block';
-            listContainer.innerHTML = '';
+            listContainer.innerHTML = '<p style="font-size:12px;color:#4b5563;text-align:center;padding:10px;">Loading data live from Sheet...</p>';
             
-            if(history.length === 0) {
-                listContainer.innerHTML = '<p style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">No transactions found.</p>';
-                return;
-            }
+            // Web App API standard fetch request
+            fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
+            .then(res => res.json())
+            .then(history => {
+                listContainer.innerHTML = '';
+                if(!history || history.length === 0) {
+                    listContainer.innerHTML = '<p style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">No transactions found.</p>';
+                    return;
+                }
 
-            for(let i = history.length - 1; i >= 0; i--) {
-                let tx = history[i];
-                let statusText = tx.status || "Pending"; 
-                let statusColor = "#f59e0b"; // Yellow for pending
-                
-                if(statusText.toLowerCase() === "success") { statusColor = "#10b981"; }
-                else if(statusText.toLowerCase() === "processing") { statusColor = "#3b82f6"; }
+                for(let i = history.length - 1; i >= 0; i--) {
+                    let tx = history[i];
+                    let statusText = tx.status || "Pending"; 
+                    let statusColor = "#f59e0b"; // Yellow
+                    
+                    if(statusText.toLowerCase() === "success") { statusColor = "#10b981"; }
+                    else if(statusText.toLowerCase() === "processing") { statusColor = "#3b82f6"; }
 
-                listContainer.innerHTML += `
-                    <div class="statement-item">
-                        <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                            <span style="color:#ef4444;">-${tx.amount} Coins</span>
-                            <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
+                    listContainer.innerHTML += `
+                        <div class="statement-item">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                                <span style="color:#ef4444;">-${tx.amount} Coins</span>
+                                <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
+                            </div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (****${tx.accNum})</div>
+                            <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
                         </div>
-                        <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (${tx.accNum})</div>
-                        <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
-                    </div>
-                `;
-            }
+                    `;
+                }
+            })
+            .catch(err => {
+                listContainer.innerHTML = '<p style="font-size:12px;color:#ef4444;text-align:center;padding:10px;">Failed to load live data.</p>';
+            });
         }
     }
 
@@ -385,7 +420,7 @@
         if(userData.balance < amount) return alert("Low balance!");
 
         submitBtn.disabled = true;
-        submitBtn.innerText = "Processing...";
+        submitBtn.innerText = "Sending to Sheet...";
 
         const payload = {
             action: "withdraw",
@@ -405,18 +440,8 @@
         })
         .then(() => {
             userData.balance -= amount;
-            
-            if(!userData.statements) userData.statements = [];
-            userData.statements.push({
-                amount: amount,
-                bankName: bankName,
-                accNum: accountNumber.slice(-4).padStart(accountNumber.length, '*'), 
-                date: new Date().toLocaleString(),
-                status: "Pending" // Initial status set to Pending
-            });
-
             localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
-            alert("🎉 Request registered successfully!");
+            alert("🎉 Request registered successfully inside Google Sheet!");
             location.reload();
         })
         .catch(err => {
