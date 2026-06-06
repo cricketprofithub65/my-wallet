@@ -72,7 +72,6 @@
         .profile-label { color: #6b7280; font-weight: 500; }
         .profile-value { color: #1f2937; font-weight: 600; }
 
-        /* Statement Box UI */
         .statement-item { background: #fff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
         .statement-item div { margin-bottom: 3px; }
     </style>
@@ -80,6 +79,7 @@
 <body>
 
 <div class="app-container">
+    <!-- Auth Screen Layout -->
     <div id="auth-screen" class="auth-container">
         <h2 style="margin-bottom: 20px; text-align: center; font-weight: 700; color: #1f2937;">Secure Wallet</h2>
         <form onsubmit="handleAuth(event)">
@@ -95,10 +95,11 @@
         </form>
     </div>
 
+    <!-- Main Dashboard -->
     <div id="main-app" style="display: none;">
         <div class="header">
             <h1>Earn Wallet</h1>
-            <div style="font-size: 13px; opacity: 0.8; margin-top: 3px;">Active Session: <span id="display-user">None</span></div>
+            <div style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Active Session: <span id="display-user" style="color: #facc15; font-weight: 700;">None</span></div>
             <div class="balance-card">
                 <div class="balance-label">Your Balance</div>
                 <div class="balance-amount"><span id="coin-balance">0</span> Coins</div>
@@ -200,7 +201,6 @@
                 <div class="profile-row"><div class="profile-label">Account Status</div><div class="profile-value" style="color: #10b981;">Verified</div></div>
                 
                 <button class="btn btn-primary" onclick="toggleStatement()" style="width: 100%; margin-top: 15px; padding: 11px; background: #4f46e5;">📋 View Account Statement</button>
-                
                 <button class="btn btn-secondary" onclick="logout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; width: 100%; margin-top: 15px;">Secure Sign Out</button>
             </div>
 
@@ -227,14 +227,14 @@
     let footballScore = 0, isBallMoving = false, keeperInterval;
 
     window.onload = function() {
-        if(currentUser) { showMainApp(); } 
-        else {
+        if(currentUser && currentUser !== "null" && currentUser !== "") { 
+            showMainApp(); 
+        } else {
             document.getElementById('auth-screen').style.display = 'flex';
             document.getElementById('main-app').style.display = 'none';
         }
     };
 
-    // --- UPDATED LOGIN / REGISTRATION LOGIC ---
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -243,12 +243,11 @@
         if(!mobile || !password) return alert("Please fill all fields!");
         
         authBtn.disabled = true;
-        authBtn.innerText = "Checking Credentials...";
+        authBtn.innerText = "Processing Session...";
 
         let localUserData = localStorage.getItem('user_' + mobile);
 
         if(!localUserData) {
-            // Agar local database me user nahi hai, toh check karo sheet me hai ya naya banana hai
             const payload = { action: "register", mobile: mobile, password: password };
 
             fetch(GOOGLE_SCRIPT_URL, {
@@ -258,7 +257,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false, statements: [] };
+                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false };
                 localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
 
                 const urlParams = new URLSearchParams(window.location.search);
@@ -272,9 +271,9 @@
                     }
                 }
 
-                currentUser = mobile;
                 localStorage.setItem('logged_in_user', mobile);
-                showMainApp();
+                alert("Registration Successful!");
+                location.reload(); // Refreshing ensures clean UI rendering
             })
             .catch(() => {
                 alert("Sheet Connection Error!");
@@ -283,16 +282,15 @@
             });
 
         } else {
-            // Agar purana user hai, toh PIN mismatch hone par error dega
             const existingUser = JSON.parse(localUserData);
             if(existingUser.password !== password) {
                 authBtn.disabled = false;
                 authBtn.innerText = "Login / Register";
                 return alert("Incorrect Secret PIN! Please enter correct PIN.");
             }
-            currentUser = mobile;
             localStorage.setItem('logged_in_user', mobile);
-            showMainApp();
+            alert("Welcome Back!");
+            location.reload(); // Refreshing updates state completely
         }
     }
 
@@ -305,7 +303,6 @@
 
         document.getElementById('coin-balance').innerText = "...";
 
-        // Live Fresh Balance Check From Users Sheet
         fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
         .then(res => res.json())
         .then(res => {
@@ -348,7 +345,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: userData.balance })
         }).then(() => {
-            alert("🎉 Telegram Join karne ke liye 30 Coins credit kar diye gaye hain!");
+            alert("🎉 30 Coins Credited!");
             location.reload();
         });
     }
@@ -401,13 +398,16 @@
                     if(statusText.toLowerCase() === "success") { statusColor = "#10b981"; }
                     else if(statusText.toLowerCase() === "processing") { statusColor = "#3b82f6"; }
 
+                    let fullAccount = String(tx.accountNumber || tx.accNum || "0000");
+                    let lastFourDigits = fullAccount.slice(-4);
+
                     listContainer.innerHTML += `
                         <div class="statement-item">
                             <div style="display:flex; justify-content:space-between; font-weight:bold;">
                                 <span style="color:#ef4444;">-${tx.amount} Coins</span>
                                 <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
                             </div>
-                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (****${tx.accNum})</div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName || "Bank"} (****${lastFourDigits})</div>
                             <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
                         </div>
                     `;
