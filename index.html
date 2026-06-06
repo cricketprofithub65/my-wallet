@@ -55,6 +55,7 @@
 <body>
 
 <div class="app-container">
+    <!-- Auth Screen -->
     <div id="auth-screen" class="auth-container">
         <h2 style="margin-bottom: 20px; text-align: center; font-weight: 700; color: #1f2937;">Secure Wallet</h2>
         <form onsubmit="handleAuth(event)">
@@ -71,6 +72,7 @@
         </form>
     </div>
 
+    <!-- Main Dashboard (User Page) -->
     <div id="main-app" style="display: none;">
         <div class="header">
             <h1>Earn Wallet</h1>
@@ -82,7 +84,9 @@
             </div>
         </div>
 
+        <!-- Section 1: Tasks -->
         <div id="tasks-section" class="content-section active">
+            <!-- Normal Rewards -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -102,8 +106,10 @@
                 </div>
             </div>
 
+            <!-- Sports Arena Tasks (Daily 1 Time) -->
             <div class="section-title">🎮 Sports Arena Tasks (Daily 1 Time)</div>
 
+            <!-- Task 1: Cricket -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -114,6 +120,7 @@
                 </div>
             </div>
 
+            <!-- Task 2: Football -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -124,6 +131,7 @@
                 </div>
             </div>
 
+            <!-- Task 3: Gaming -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -134,6 +142,7 @@
                 </div>
             </div>
 
+            <!-- Task 4: Ludo -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -144,6 +153,7 @@
                 </div>
             </div>
 
+            <!-- Task 5: Squash -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -154,6 +164,7 @@
                 </div>
             </div>
             
+            <!-- Redeem Code -->
             <div class="task-card" style="margin-top: 15px; border: 1px dashed #4f46e5; background: #f5f3ff;">
                 <h3 style="font-size: 15px; font-weight: 600; color: #4f46e5; margin-bottom: 5px;">🎁 Have a Redeem Code?</h3>
                 <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">Telegram se code copy karke yahan claim karein!</p>
@@ -164,6 +175,7 @@
             </div>
         </div>
 
+        <!-- Section 2: Invite -->
         <div id="invite-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 10px; color: #1f2937;">🔑 Refer & Earn</h3>
@@ -173,6 +185,7 @@
             </div>
         </div>
 
+        <!-- Section 3: Bank Panel -->
         <div id="withdraw-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">Bank Settlement Panel</h3>
@@ -187,6 +200,7 @@
             </div>
         </div>
 
+        <!-- Section 4: Profile -->
         <div id="profile-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">My Profile</h3>
@@ -203,6 +217,7 @@
             </div>
         </div>
 
+        <!-- Footer Navigation -->
         <div class="bottom-nav">
             <div class="nav-item active" id="nav-tasks" onclick="switchTab('tasks')"><span class="icon">📋</span><div>Tasks</div></div>
             <div class="nav-item" id="nav-invite" onclick="switchTab('invite')"><span class="icon">🎁</span><div>Invite</div></div>
@@ -225,7 +240,7 @@
         }
     };
 
-    // 🔒 SECURE LOGIN LOGIC
+    // 🔒 FIXED LOGIN & USER PAGE INTERACTION
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -242,8 +257,9 @@
         .then(response => {
             if (response.status === "success" || response.message === "Login Successful" || response.message === "Registration Successful") {
                 localStorage.setItem('logged_in_user', mobile);
+                currentUser = mobile;
                 alert("Access Granted! Sync Successful.");
-                location.reload();
+                showMainApp(); // 🚀 FIX: Window reload ke bina seedhe Dashboard par bhejega
             } else {
                 alert("❌ Auth Error: " + (response.message || "Invalid Secret PIN or Mobile!"));
                 authBtn.disabled = false;
@@ -259,7 +275,8 @@
                 body: new URLSearchParams({ action: "register", mobile: mobile, password: password })
             }).then(() => {
                 localStorage.setItem('logged_in_user', mobile);
-                location.reload();
+                currentUser = mobile;
+                showMainApp(); // 🚀 FIX: Backup flow ke liye bhi seedhe dashboard display
             }).catch(() => {
                 alert("Server Connection Issue. Please check Web App Deployment!");
                 authBtn.disabled = false;
@@ -268,7 +285,7 @@
         });
     }
 
-    // 🛠️ FIX: FORGET PASSWORD SUBMIT LOCK FIXED
+    // 🛠️ FORGET PASSWORD ACTION
     function handleForgetPassword(e) {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         alert("🔒 Security Prompt:\n\nApna PIN reset karwane ke liye kripya hamare Telegram Support Channel par contact karein aur apna registered mobile number bhejey.");
@@ -276,6 +293,7 @@
         return false;
     }
 
+    // 🚀 SHOW DASHBOARD (USER PAGE)
     function showMainApp() {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
@@ -288,8 +306,9 @@
         updateLiveBalance();
     }
 
-    // Live Balance (10 Coins = 1 Rupee)
+    // Live Balance
     function updateLiveBalance() {
+        if (!currentUser) return;
         fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
         .then(res => res.json())
         .then(res => {
@@ -325,7 +344,7 @@
         }).then(() => {
             localStorage.setItem(storageKey, todayDate);
             alert(`🎉 Success! +${coinsReward} Coins added for playing ${sportName}.`);
-            location.reload();
+            updateLiveBalance();
         }).catch(() => {
             alert("Error updating coins. Try again.");
         });
@@ -417,7 +436,9 @@
         }).then(() => {
             localStorage.setItem('used_code_' + codeInput, 'true');
             alert(`🎉 Success! +${coinReward} Coins added.`);
-            location.reload();
+            claimBtn.disabled = false;
+            claimBtn.innerText = "Claim";
+            updateLiveBalance();
         });
     }
 
@@ -458,7 +479,9 @@
                 body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
             }).then(() => {
                 alert("Withdrawal Logged in Spreadsheet!");
-                location.reload();
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Submit Settlement";
+                updateLiveBalance();
             });
         });
     }
@@ -475,7 +498,7 @@
             body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
         }).then(() => {
             alert("🎉 +10 Coins Added Successfully!");
-            location.reload();
+            updateLiveBalance();
         });
     }
 
@@ -496,7 +519,7 @@
         }).then(() => {
             localStorage.setItem(`claimed_daily_${currentUser}`, todayDate);
             alert("🎉 Daily Reward check-in successful (+2 Coins)!");
-            location.reload();
+            updateLiveBalance();
         });
     }
 
@@ -510,7 +533,9 @@
     document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
     function logout() {
         localStorage.removeItem('logged_in_user');
-        location.reload();
+        currentUser = null;
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
     }
 </script>
 </body>
