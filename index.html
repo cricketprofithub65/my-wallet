@@ -50,6 +50,7 @@
 <body>
 
 <div class="app-container">
+    <!-- Auth Screen -->
     <div id="auth-screen" class="auth-container">
         <h2 style="margin-bottom: 20px; text-align: center; font-weight: 700; color: #1f2937;">Secure Wallet</h2>
         <form onsubmit="handleAuth(event)">
@@ -65,6 +66,7 @@
         </form>
     </div>
 
+    <!-- Main Dashboard -->
     <div id="main-app" style="display: none;">
         <div class="header">
             <h1>Earn Wallet</h1>
@@ -75,6 +77,7 @@
             </div>
         </div>
 
+        <!-- Section 1: Tasks -->
         <div id="tasks-section" class="content-section active">
             <div class="task-card">
                 <div class="task-header">
@@ -96,6 +99,7 @@
             </div>
         </div>
 
+        <!-- Section 2: Invite -->
         <div id="invite-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 10px; color: #1f2937;">🔑 Refer & Earn</h3>
@@ -105,6 +109,7 @@
             </div>
         </div>
 
+        <!-- Section 3: Bank -->
         <div id="withdraw-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">Bank Settlement Panel</h3>
@@ -119,6 +124,7 @@
             </div>
         </div>
 
+        <!-- Section 4: Profile -->
         <div id="profile-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">My Profile</h3>
@@ -135,6 +141,7 @@
             </div>
         </div>
 
+        <!-- Footer Navigation (All 4 Tabs Active) -->
         <div class="bottom-nav">
             <div class="nav-item active" id="nav-tasks" onclick="switchTab('tasks')"><span class="icon">📋</span><div>Tasks</div></div>
             <div class="nav-item" id="nav-invite" onclick="switchTab('invite')"><span class="icon">🎁</span><div>Invite</div></div>
@@ -145,8 +152,8 @@
 </div>
 
 <script>
-    // 📢 AAPKA LIVE URL PERFECTLY LINKED
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzb5i20JhavgjIiwpfEd8IDlTsHfvSr9sAsm5ikA4vBgTMMlDXHZq_kC8Fp7fPhYHEd/exec";
+    // 📢 AAPKA RECENT UPDATED LIVE URL
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysRXdhFrjnLdGUThVtFOyIVvraG3jZc7KVS49cIXBN4cLFTGyDufdIU9nlANu5nQzEPw/exec";
     let currentUser = localStorage.getItem('logged_in_user') || null;
 
     window.onload = function() {
@@ -165,7 +172,7 @@
         const password = document.getElementById('auth-password').value.trim();
         
         authBtn.disabled = true;
-        authBtn.innerText = "Syncing User Database...";
+        authBtn.innerText = "Syncing User...";
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -190,7 +197,6 @@
         document.getElementById('display-user').innerText = currentUser;
         document.getElementById('prof-mobile').innerText = currentUser;
         
-        // Setup Refer link dynamically based on the domain URL
         const currentDomain = window.location.href.split('?')[0];
         document.getElementById('refer-link-box').innerText = `${currentDomain}?ref=${currentUser}`;
         
@@ -223,7 +229,7 @@
             box.style.display = 'none';
         } else {
             box.style.display = 'block';
-            listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#6b7280;">Loading history & checking refunds...</p>';
+            listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#6b7280;">Loading history...</p>';
             
             fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
             .then(res => res.json())
@@ -236,15 +242,14 @@
 
                 history.reverse().forEach(tx => {
                     let statusText = tx.status ? String(tx.status).trim() : "Pending";
-                    let statusColor = "#f59e0b"; // Yellow
+                    let statusColor = "#f59e0b";
                     
                     if(statusText.toLowerCase() === "success") {
-                        statusColor = "#10b981"; // Green
+                        statusColor = "#10b981";
                     } else if(statusText.toLowerCase() === "reject" || statusText.toLowerCase() === "rejected") {
-                        statusColor = "#ef4444"; // Red
+                        statusColor = "#ef4444";
                     }
 
-                    // Masking Account Number Safely (last 4 digits matching WhatsApp SS style)
                     let cleanAcc = tx.accountNumber ? String(tx.accountNumber).slice(-4) : "0000";
                     let displayDate = tx.date ? tx.date.split(',')[0] : 'Today';
 
@@ -259,8 +264,6 @@
                         </div>
                     `;
                 });
-                
-                // Real-time automatic balance refresh after script check!
                 updateLiveBalance();
             });
         }
