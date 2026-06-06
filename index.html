@@ -34,8 +34,7 @@
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; }
         .form-group input { width: 100%; padding: 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; }
         
-        /* Forget PIN Link Style */
-        .forget-link { font-size: 12px; color: #4f46e5; text-decoration: none; font-weight: 600; float: right; margin-top: 5px; cursor: pointer; }
+        .forget-link { font-size: 12px; color: #4f46e5; text-decoration: none; font-weight: 600; float: right; margin-top: 5px; cursor: pointer; display: inline-block; }
         .forget-link:hover { text-decoration: underline; }
         
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 400px; background: #ffffff; display: flex; border-top: 1px solid #e5e7eb; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 100; }
@@ -66,7 +65,7 @@
             <div class="form-group" style="margin-bottom: 25px;">
                 <label>Secret PIN</label>
                 <input type="password" id="auth-password" placeholder="Enter secret PIN" required>
-                <span class="forget-link" onclick="handleForgetPassword()">Forget PIN?</span>
+                <span class="forget-link" onclick="handleForgetPassword(event)">Forget PIN?</span>
             </div>
             <button type="submit" id="auth-submit-btn" class="btn btn-success" style="margin-top: 10px;">Login / Register</button>
         </form>
@@ -156,4 +155,363 @@
             </div>
             
             <div class="task-card" style="margin-top: 15px; border: 1px dashed #4f46e5; background: #f5f3ff;">
-                <h3 style="font-size: 15px; font-weight: 600; color: #4f46e5; margin-bottom: 5px;">
+                <h3 style="font-size: 15px; font-weight: 600; color: #4f46e5; margin-bottom: 5px;">🎁 Have a Redeem Code?</h3>
+                <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">Telegram se code copy karke yahan claim karein!</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="promo-code-input" placeholder="Enter Code Here" style="flex: 1; padding: 8px 12px; border: 1px solid #c7d2fe; border-radius: 8px; font-size: 14px; outline: none; text-transform: uppercase;">
+                    <button id="promo-claim-btn" onclick="claimRedeemCode()" class="btn btn-primary" style="padding: 8px 16px;">Claim</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="invite-section" class="content-section">
+            <div class="task-card">
+                <h3 style="font-size: 16px; margin-bottom: 10px; color: #1f2937;">🔑 Refer & Earn</h3>
+                <p style="font-size: 13px; color: #4b5563; line-height: 1.5;">Apne dosto ko invite karein aur har successful registration par payein <span style="color:#10b981; font-weight:bold;">+25 Coins</span> turant!</p>
+                <div class="share-box" id="refer-link-box">Loading dynamic refer link...</div>
+                <button onclick="copyReferLink()" class="btn btn-success" style="margin-top: 12px; background:#4f46e5;">Copy Refer Link</button>
+            </div>
+        </div>
+
+        <div id="withdraw-section" class="content-section">
+            <div class="task-card">
+                <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">Bank Settlement Panel</h3>
+                <form onsubmit="handleWithdraw(event)">
+                    <div class="form-group"><label>Account Holder Name</label><input type="text" id="bank-title" placeholder="As per bank passbook" required></div>
+                    <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name" placeholder="e.g. Bank of Baroda" required></div>
+                    <div class="form-group"><label>Account Number</label><input type="text" id="account-number" placeholder="Enter account number" required></div>
+                    <div class="form-group"><label>Branch IFSC Code</label><input type="text" id="ifsc-code" placeholder="Enter IFSC code" required></div>
+                    <div class="form-group"><label>Coins to Redeem (Min 100)</label><input type="number" id="withdraw-amount" min="100" placeholder="Minimum 100" required></div>
+                    <button type="submit" id="withdraw-submit-btn" class="btn btn-success">Submit Settlement</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="profile-section" class="content-section">
+            <div class="task-card">
+                <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">My Profile</h3>
+                <div class="profile-row"><div class="profile-label">Registered Mobile</div><div class="profile-value" id="prof-mobile">0000000000</div></div>
+                <div class="profile-row"><div class="profile-label">Account Status</div><div class="profile-value" style="color: #10b981;">Verified</div></div>
+                
+                <button class="btn btn-primary" onclick="toggleStatement()" style="width: 100%; margin-top: 15px; padding: 11px; background: #4f46e5;">📋 View Account Statement</button>
+                <button class="btn btn-secondary" onclick="logout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; width: 100%; margin-top: 15px;">Secure Sign Out</button>
+            </div>
+
+            <div class="task-card" id="statement-box" style="display: none; margin-top: 15px;">
+                <h4 style="font-size: 14px; margin-bottom: 10px; color: #374151;">Your Withdrawal History</h4>
+                <div id="statement-list" style="max-height: 250px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" id="nav-tasks" onclick="switchTab('tasks')"><span class="icon">📋</span><div>Tasks</div></div>
+            <div class="nav-item" id="nav-invite" onclick="switchTab('invite')"><span class="icon">🎁</span><div>Invite</div></div>
+            <div class="nav-item" id="nav-withdraw" onclick="switchTab('withdraw')"><span class="icon">🏦</span><div>Bank</div></div>
+            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span class="icon">👤</span><div>Profile</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxm2LVnM9ebtj1pluyl7924I408p_MSLzZXHCtnAzANwnrbogiiTp4VBfGN93ulYNeKA/exec";
+    let currentUser = localStorage.getItem('logged_in_user') || null;
+
+    window.onload = function() {
+        if(currentUser && currentUser !== "null" && currentUser !== "") { 
+            showMainApp(); 
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+        }
+    };
+
+    // 🔒 SECURE LOGIN LOGIC
+    function handleAuth(event) {
+        event.preventDefault();
+        const authBtn = document.getElementById('auth-submit-btn');
+        const mobile = document.getElementById('auth-mobile').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+        
+        if (!mobile || !password) return alert("Please fill all details!");
+
+        authBtn.disabled = true;
+        authBtn.innerText = "Checking Credentials...";
+
+        fetch(`${GOOGLE_SCRIPT_URL}?action=loginCheck&mobile=${mobile}&password=${password}`)
+        .then(res => res.json())
+        .then(response => {
+            if (response.status === "success" || response.message === "Login Successful" || response.message === "Registration Successful") {
+                localStorage.setItem('logged_in_user', mobile);
+                alert("Access Granted! Sync Successful.");
+                location.reload();
+            } else {
+                alert("❌ Auth Error: " + (response.message || "Invalid Secret PIN or Mobile!"));
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            }
+        })
+        .catch(() => {
+            // Register Backup System
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ action: "register", mobile: mobile, password: password })
+            }).then(() => {
+                localStorage.setItem('logged_in_user', mobile);
+                location.reload();
+            }).catch(() => {
+                alert("Server Connection Issue. Please check Web App Deployment!");
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            });
+        });
+    }
+
+    // 🛠️ FIX: FORGET PASSWORD SUBMIT LOCK FIXED
+    function handleForgetPassword(e) {
+        if(e) { e.preventDefault(); e.stopPropagation(); }
+        alert("🔒 Security Prompt:\n\nApna PIN reset karwane ke liye kripya hamare Telegram Support Channel par contact karein aur apna registered mobile number bhejey.");
+        window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
+        return false;
+    }
+
+    function showMainApp() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('display-user').innerText = currentUser;
+        document.getElementById('prof-mobile').innerText = currentUser;
+        
+        const currentDomain = window.location.href.split('?')[0];
+        document.getElementById('refer-link-box').innerText = `${currentDomain}?ref=${currentUser}`;
+        
+        updateLiveBalance();
+    }
+
+    // Live Balance (10 Coins = 1 Rupee)
+    function updateLiveBalance() {
+        fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
+        .then(res => res.json())
+        .then(res => {
+            const coins = parseInt(res.balance) || 0;
+            document.getElementById('coin-balance').innerText = coins;
+            const rupees = (coins / 10).toFixed(2);
+            document.getElementById('rupee-balance').innerText = rupees;
+        })
+        .catch(() => {
+            document.getElementById('coin-balance').innerText = "0";
+            document.getElementById('rupee-balance').innerText = "0.00";
+        });
+    }
+
+    // Sports Arena 1 Day Lock
+    function claimSportReward(sportName, coinsReward) {
+        const todayDate = new Date().toDateString();
+        const storageKey = `claimed_sport_${sportName}_${currentUser}`;
+        const savedDate = localStorage.getItem(storageKey);
+
+        if (savedDate === todayDate) {
+            return alert(`⚠️ Aap aaj ka ${sportName} task pehle hi complete kar chuke hain! Kal dobara koshish karein.`);
+        }
+
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + coinsReward;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            localStorage.setItem(storageKey, todayDate);
+            alert(`🎉 Success! +${coinsReward} Coins added for playing ${sportName}.`);
+            location.reload();
+        }).catch(() => {
+            alert("Error updating coins. Try again.");
+        });
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabName + '-section').classList.add('active');
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
+        document.getElementById('nav-' + tabName).classList.add('active');
+    }
+
+    function toggleStatement() {
+        const box = document.getElementById('statement-box');
+        const listContainer = document.getElementById('statement-list');
+
+        if(box.style.display === 'block') {
+            box.style.display = 'none';
+        } else {
+            box.style.display = 'block';
+            listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#6b7280;">Loading history...</p>';
+            
+            fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
+            .then(res => res.json())
+            .then(history => {
+                listContainer.innerHTML = '';
+                if(!history || history.length === 0) {
+                    listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#9ca3af;">No transaction logs.</p>';
+                    return;
+                }
+
+                history.reverse().forEach(tx => {
+                    let statusText = tx.status ? String(tx.status).trim() : "Pending";
+                    let statusColor = "#f59e0b";
+                    
+                    if(statusText.toLowerCase() === "success") {
+                        statusColor = "#10b981";
+                    } else if(statusText.toLowerCase() === "reject" || statusText.toLowerCase() === "rejected") {
+                        statusColor = "#ef4444";
+                    }
+
+                    let cleanAcc = tx.accountNumber ? String(tx.accountNumber).slice(-4) : "0000";
+                    let displayDate = tx.date ? tx.date.split(',')[0] : 'Today';
+
+                    listContainer.innerHTML += `
+                        <div class="statement-item" style="border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; background:#fff;">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                                <span style="color:#ef4444;">-${tx.amount} Coins</span>
+                                <span style="color:#6b7280; font-size:11px;">${displayDate}</span>
+                            </div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName || 'Bank'} (****${cleanAcc})</div>
+                            <div style="font-size:11px; color:${statusColor}; font-weight:700; margin-top:2px; text-transform:uppercase;">Status: ${statusText}</div>
+                        </div>
+                    `;
+                });
+                updateLiveBalance();
+            });
+        }
+    }
+
+    function claimRedeemCode() {
+        const codeInput = document.getElementById('promo-code-input').value.trim().toUpperCase();
+        const claimBtn = document.getElementById('promo-claim-btn');
+        
+        if(!codeInput) return alert("Please enter a code!");
+
+        let coinReward = 0;
+        if (codeInput === "TELEGRAM30") {
+            coinReward = 30;
+        } else {
+            return alert("❌ Invalid or Expired Code!");
+        }
+
+        if (localStorage.getItem('used_code_' + codeInput)) {
+            return alert("⚠️ Aap yeh code pehle hi claim kar chuke hain!");
+        }
+
+        claimBtn.disabled = true;
+        claimBtn.innerText = "...";
+
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + coinReward;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            localStorage.setItem('used_code_' + codeInput, 'true');
+            alert(`🎉 Success! +${coinReward} Coins added.`);
+            location.reload();
+        });
+    }
+
+    function handleWithdraw(event) {
+        event.preventDefault();
+        const submitBtn = document.getElementById('withdraw-submit-btn');
+        const amount = parseInt(document.getElementById('withdraw-amount').value);
+        const currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+
+        if (amount < 100) return alert("Minimum withdrawal limit is 100 Coins!");
+        if (currentBal < amount) return alert("Wallet Balance is too low!");
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Processing settlement...";
+
+        const params = {
+            action: "withdraw",
+            mobile: currentUser,
+            bankTitle: document.getElementById('bank-title').value.trim(),
+            bankName: document.getElementById('bank-name').value.trim(),
+            accountNumber: document.getElementById('account-number').value.trim(),
+            ifscCode: document.getElementById('ifsc-code').value.trim(),
+            amount: amount
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(params)
+        })
+        .then(() => {
+            let newBal = currentBal - amount;
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+            }).then(() => {
+                alert("Withdrawal Logged in Spreadsheet!");
+                location.reload();
+            });
+        });
+    }
+
+    function claimTelegramCoins() {
+        window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + 10;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            alert("🎉 +10 Coins Added Successfully!");
+            location.reload();
+        });
+    }
+
+    function claimDailyReward() {
+        const todayDate = new Date().toDateString();
+        if (localStorage.getItem(`claimed_daily_${currentUser}`) === todayDate) {
+            return alert("⚠️ Daily Reward aaj pehle hi claim ho chuka hai!");
+        }
+
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + 2;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            localStorage.setItem(`claimed_daily_${currentUser}`, todayDate);
+            alert("🎉 Daily Reward check-in successful (+2 Coins)!");
+            location.reload();
+        });
+    }
+
+    function copyReferLink() {
+        const linkText = document.getElementById('refer-link-box').innerText;
+        navigator.clipboard.writeText(linkText).then(() => {
+            alert("Refer link copied to clipboard!");
+        });
+    }
+
+    document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
+    function logout() {
+        localStorage.removeItem('logged_in_user');
+        location.reload();
+    }
+</script>
+</body>
+</html>
