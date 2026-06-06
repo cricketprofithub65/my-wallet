@@ -20,6 +20,7 @@
         .content-section.active { display: block; }
         
         .task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .task-info h3 { font-size: 15px; font-weight: 600; color: #1f2937; }
         .task-info p { font-size: 13px; color: #10b981; font-weight: 600; margin-top: 2px; }
@@ -68,8 +69,8 @@
         .target-right { right: 15%; }
         .kick-line { position: absolute; bottom: 31px; left: 50%; width: 2px; height: 0px; background: linear-gradient(to top, rgba(255,255,255,0.8), rgba(255,255,255,0)); transform-origin: bottom center; transition: all 0.3s ease; opacity: 0; z-index: 8; }
         
-        /* NEW NATIVE MIND GAMES STYLING */
-        .matrix-grid { display: grid; grid-template-columns: repeat(3, 15px); gap: 15px; margin: 15px auto; width: max-content; display: none; }
+        /* MIND GAMES STYLING */
+        .matrix-grid { display: grid; grid-template-columns: repeat(3, 75px); gap: 15px; margin: 15px auto; width: max-content; display: none; }
         .matrix-box { width: 70px; height: 70px; background: #374151; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
         .matrix-box.active-blink { background: #3b82f6; }
         .matrix-box.success-blink { background: #10b981; }
@@ -191,6 +192,7 @@
                 <button class="btn btn-success" id="claim-football-btn" onclick="claimFootballCoins()" style="display: none; width: 100%;">Claim Coins</button>
             </div>
 
+            <!-- GAME 3: MEMORY MATRIX -->
             <div class="task-card" id="matrix-task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -214,6 +216,7 @@
                 <button class="btn btn-success" id="claim-matrix-btn" onclick="claimMatrixCoins()" style="display: none; width: 100%;">Claim Coins</button>
             </div>
 
+            <!-- GAME 4: MATH RUSH -->
             <div class="task-card" id="math-task-card">
                 <div class="task-header">
                     <div class="task-info">
@@ -306,6 +309,7 @@
         }
     };
 
+    // ORIGINAL EXACT LOGIN REGISTER CORE FUNCTION (RESTORED)
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -318,7 +322,12 @@
             authBtn.disabled = true;
             authBtn.innerText = "Registering on Sheet...";
 
-            const payload = { action: "register", mobile: mobile, password: password };
+            // Naye user ka data Google Sheet 'Users' me bhej rahe hain
+            const payload = {
+                action: "register",
+                mobile: mobile,
+                password: password
+            };
 
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
@@ -327,14 +336,456 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, lastMatrixPlayed: null, lastMathPlayed: null, cricketChances: 0, footballChances: 0, matrixChances: 0, mathChances: 0, tgJoined: false, redeemedCodes: [], statements: [] };
+                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, cricketChances: 0, footballChances: 0, tgJoined: false, redeemedCodes: [], statements: [] };
                 localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
 
+                // Referral Link Check
                 const urlParams = new URLSearchParams(window.location.search);
                 const referrerMobile = urlParams.get('ref');
+                
                 if(referrerMobile && referrerMobile !== mobile) {
                     let referrerData = localStorage.getItem('user_' + referrerMobile);
                     if(referrerData) {
                         let referrer = JSON.parse(referrerData);
                         referrer.balance = (referrer.balance || 0) + 50; 
                         localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
+                    }
+                }
+
+                currentUser = mobile;
+                localStorage.setItem('logged_in_user', mobile);
+                showMainApp();
+            })
+            .catch(err => {
+                alert("Sheet Connection Error!");
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            });
+
+        } else {
+            const existingUser = JSON.parse(userData);
+            if(existingUser.password !== password) {
+                return alert("Incorrect Secret PIN! Please enter correct PIN.");
+            }
+            currentUser = mobile;
+            localStorage.setItem('logged_in_user', mobile);
+            showMainApp();
+        }
+    }
+
+    function showMainApp() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('display-user').innerText = currentUser;
+        document.getElementById('prof-mobile').innerText = currentUser;
+        document.getElementById('refer-link-display').innerText = window.location.href.split('?')[0] + "?ref=" + currentUser;
+
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser)) || { balance: 0 };
+        document.getElementById('coin-balance').innerText = userData.balance || 0;
+        
+        if(userData.tgJoined) {
+            const tgBtn = document.getElementById('tg-join-btn');
+            if(tgBtn) {
+                tgBtn.disabled = true;
+                tgBtn.innerText = "Joined";
+                tgBtn.style.background = "#6b7280";
+            }
+        }
+        checkDailyLimits();
+    }
+
+    function claimTelegramCoins() {
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        
+        if(userData.tgJoined) {
+            alert("Aapne pehle hi join kar liya hai!");
+            return;
+        }
+        
+        window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
+        
+        userData.balance = (userData.balance || 0) + 30;
+        userData.tgJoined = true;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        
+        alert("🎉 Telegram Join karne ke liye 30 Coins credit kar diye gaye hain!");
+        location.reload();
+    }
+
+    function redeemCode() {
+        const code = document.getElementById("redeem-code").value.trim();
+        const validCodes = {
+            "WELCOME50": 50,
+            "BONUS100": 100
+        };
+
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+
+        if (!userData.redeemedCodes) {
+            userData.redeemedCodes = [];
+        }
+
+        if(userData.redeemedCodes.includes(code)){
+            return alert("Code already used!");
+        }
+
+        if(validCodes[code]){
+            userData.balance += validCodes[code];
+            userData.redeemedCodes.push(code);
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+            alert(validCodes[code] + " Coins Added!");
+            location.reload();
+        } else {
+            alert("Invalid Redeem Code");
+        }
+    }
+
+    function checkDailyLimits() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        const today = new Date().toDateString();
+        
+        // Date reset system for chances
+        if(userData.lastPlayed !== today) { userData.cricketChances = 0; }
+        if(userData.lastFootballPlayed !== today) { userData.footballChances = 0; }
+        if(userData.lastMatrixPlayed !== today) { userData.matrixChances = 0; }
+        if(userData.lastMathPlayed !== today) { userData.mathChances = 0; }
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+        // Sports Game Limits (2 chances per day)
+        if(userData.lastPlayed === today && userData.cricketChances >= 2) {
+            document.getElementById('play-sport-btn').disabled = true;
+            document.getElementById('play-sport-btn').innerText = "Played Today";
+        }
+        if(userData.lastFootballPlayed === today && userData.footballChances >= 2) {
+            document.getElementById('play-football-btn').disabled = true;
+            document.getElementById('play-football-btn').innerText = "Played Today";
+        }
+        if(userData.lastMatrixPlayed === today && userData.matrixChances >= 2) {
+            document.getElementById('play-matrix-btn').disabled = true;
+            document.getElementById('play-matrix-btn').innerText = "Played Today";
+        }
+        if(userData.lastMathPlayed === today && userData.mathChances >= 2) {
+            document.getElementById('play-math-btn').disabled = true;
+            document.getElementById('play-math-btn').innerText = "Played Today";
+        }
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabName + '-section').classList.add('active');
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
+        document.getElementById('nav-' + tabName).classList.add('active');
+    }
+
+    function toggleStatement() {
+        const box = document.getElementById('statement-box');
+        const listContainer = document.getElementById('statement-list');
+
+        if(box.style.display === 'block') {
+            box.style.display = 'none';
+        } else {
+            box.style.display = 'block';
+            listContainer.innerHTML = '<p style="font-size:12px;color:#4b5563;text-align:center;padding:10px;">Loading data live from Sheet...</p>';
+            
+            fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
+            .then(res => res.json())
+            .then(history => {
+                listContainer.innerHTML = '';
+                if(!history || history.length === 0) {
+                    listContainer.innerHTML = '<p style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">No transactions found.</p>';
+                    return;
+                }
+
+                for(let i = history.length - 1; i >= 0; i--) {
+                    let tx = history[i];
+                    let statusText = tx.status || "Pending"; 
+                    let statusColor = "#f59e0b"; 
+                    
+                    if(statusText.toLowerCase() === "success") { statusColor = "#10b981"; }
+                    else if(statusText.toLowerCase() === "processing") { statusColor = "#3b82f6"; }
+
+                    listContainer.innerHTML += `
+                        <div class="statement-item">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                                <span style="color:#ef4444;">-${tx.amount} Coins</span>
+                                <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
+                            </div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (**${tx.accNum})</div>
+                            <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                listContainer.innerHTML = '<p style="font-size:12px;color:#ef4444;text-align:center;padding:10px;">Failed to load live data.</p>';
+            });
+        }
+    }
+
+    function handleWithdraw(event) {
+        event.preventDefault();
+        const submitBtn = document.getElementById('withdraw-submit-btn');
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        
+        const bankTitle = document.getElementById('bank-title').value.trim();
+        const bankName = document.getElementById('bank-name').value.trim();
+        const accountNumber = document.getElementById('account-number').value.trim();
+        const ifscCode = document.getElementById('ifsc-code').value.trim();
+        const amount = parseInt(document.getElementById('withdraw-amount').value);
+
+        if(userData.balance < amount) return alert("Low balance!");
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Sending to Sheet...";
+
+        const payload = {
+            action: "withdraw",
+            mobile: currentUser,
+            bankTitle: bankTitle,
+            bankName: bankName,
+            accountNumber: accountNumber,
+            ifscCode: ifscCode,
+            amount: amount
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            userData.balance -= amount;
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+            alert("🎉 Request registered successfully inside Google Sheet!");
+            location.reload();
+        })
+        .catch(err => {
+            alert("Network Error!");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Settlement";
+        });
+    }
+
+    function copyReferLink() {
+        const linkText = document.getElementById('refer-link-display').innerText;
+        navigator.clipboard.writeText(linkText).then(() => alert("Link copied!"));
+    }
+
+    // --- CRICKET ENGINE ---
+    function startCricketGame() {
+        score = 0; wickets = 0;
+        document.getElementById('game-score').innerText = score;
+        document.getElementById('game-wickets').innerText = wickets;
+        document.getElementById('play-sport-btn').style.display = 'none';
+        document.getElementById('game-pitch').style.display = 'block';
+        setTimeout(deliverBall, 1200);
+    }
+    function deliverBall() {
+        if(score >= 20 || wickets >= 2) return;
+        isBallFlying = true; isBatSwung = false; ballPositionTop = 30; ballScale = 0.5;
+        if (score <= 6) { currentBallSpeed = 26; } else if (score <= 12) { currentBallSpeed = 16; } else { currentBallSpeed = 10; }
+        const ball = document.getElementById('live-ball');
+        ball.style.display = 'block'; ball.style.top = ballPositionTop + 'px';
+        ball.style.left = `calc(50% + ${(Math.random() * 24) - 12}px)`;
+        ballTimer = setInterval(() => {
+            ballPositionTop += 5; ballScale += 0.035;
+            ball.style.top = ballPositionTop + 'px';
+            ball.style.transform = `translateX(-50%) scale(${ballScale})`;
+            if(ballPositionTop >= 180 && ballPositionTop <= 215 && isBatSwung) {
+                clearInterval(ballTimer); isBallFlying = false; ball.style.display = 'none';
+                const runs = Math.random() > 0.5 ? 4 : 6; score += runs;
+                document.getElementById('game-score').innerText = score;
+                if(score >= 20) { endGame(true); } else { setTimeout(deliverBall, 1500); }
+            }
+            if(ballPositionTop >= 230) {
+                clearInterval(ballTimer); isBallFlying = false; ball.style.display = 'none';
+                wickets++; document.getElementById('game-wickets').innerText = wickets;
+                if(wickets >= 2) { endGame(false); } else { setTimeout(deliverBall, 1500); }
+            }
+        }, currentBallSpeed);
+    }
+    function swingBat() { if(!isBallFlying || isBatSwung) return; isBatSwung = true; document.getElementById('batsman').classList.add('swinging'); setTimeout(() => document.getElementById('batsman').classList.remove('swinging'), 150); }
+    function endGame(isWon) {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        const today = new Date().toDateString();
+        
+        if(userData.lastPlayed !== today) {
+            userData.lastPlayed = today;
+            userData.cricketChances = 1;
+        } else {
+            userData.cricketChances = (userData.cricketChances || 0) + 1;
+        }
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        
+        if(isWon) { 
+            generatedReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+            document.getElementById('game-pitch').style.pointerEvents = 'none'; 
+            const claimBtn = document.getElementById('claim-sport-btn');
+            claimBtn.innerText = `Claim ${generatedReward} Coins`;
+            claimBtn.style.display = 'block'; 
+        } 
+        else { 
+            alert(`ALL OUT! Chance ${userData.cricketChances}/2 used.`); 
+            location.reload(); 
+        }
+    }
+    function claimSportCoins() { 
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+        userData.balance += generatedReward; 
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+        location.reload(); 
+    }
+
+    // --- FOOTBALL ENGINE ---
+    function startFootballGame() { footballScore = 0; document.getElementById('play-football-btn').style.display = 'none'; document.getElementById('football-pitch').style.display = 'block'; keeperInterval = setInterval(moveKeeper, 700); }
+    function moveKeeper() { const keeper = document.getElementById('goalkeeper'); keeper.style.left = [20, 35, 50, 65, 80][Math.floor(Math.random() * 5)] + "%"; }
+    function shootFootball(playerTarget) {
+        if(isBallMoving || footballScore >= 5) return; isBallMoving = true;
+        const ball = document.getElementById('soccer-ball'); const keeper = document.getElementById('goalkeeper'); const line = document.getElementById('kick-line');
+        let angle = playerTarget === 20 ? -30 : (playerTarget === 80 ? 30 : 0);
+        line.style.opacity = '1'; line.style.height = '140px'; line.style.transform = `rotate(${angle}deg)`;
+        setTimeout(() => {
+            line.style.opacity = '0'; line.style.height = '0px'; ball.style.bottom = '160px'; ball.style.left = playerTarget + '%'; ball.style.transform = 'translateX(-50%) scale(0.55)';
+            setTimeout(() => {
+                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { 
+                    alert("Saved!"); 
+                    setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                } 
+                else { 
+                    footballScore++; 
+                    document.getElementById('football-score').innerText = footballScore; 
+                    if(footballScore >= 5) { 
+                        clearInterval(keeperInterval); 
+                        generatedReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+                        const claimFbBtn = document.getElementById('claim-football-btn');
+                        claimFbBtn.innerText = `Claim ${generatedReward} Coins`;
+                        claimFbBtn.style.display = 'block'; 
+                        
+                        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+                        const today = new Date().toDateString();
+                        if(userData.lastFootballPlayed !== today) {
+                            userData.lastFootballPlayed = today;
+                            userData.footballChances = 1;
+                        } else {
+                            userData.footballChances = (userData.footballChances || 0) + 1;
+                        }
+                        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+                    } 
+                    setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                }
+            }, 300);
+        }, 200);
+    }
+    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += generatedReward; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+
+    // --- GAME 3: MEMORY MATRIX ENGINE ---
+    function startMatrixGame() {
+        matrixSequence = []; userSequence = [];
+        document.getElementById('play-matrix-btn').style.display = 'none';
+        document.getElementById('matrix-grid').style.display = 'grid';
+        
+        while(matrixSequence.length < 4) {
+            let r = Math.floor(Math.random() * 9);
+            if(!matrixSequence.includes(r)) matrixSequence.push(r);
+        }
+        playMatrixSequence();
+    }
+    function playMatrixSequence() {
+        let boxes = document.querySelectorAll('.matrix-box');
+        matrixSequence.forEach((boxIdx, i) => {
+            setTimeout(() => {
+                boxes[boxIdx].classList.add('active-blink');
+                setTimeout(() => boxes[boxIdx].classList.remove('active-blink'), 500);
+            }, (i + 1) * 800);
+        });
+    }
+    function handleMatrixClick(idx) {
+        if(matrixSequence.length === 0 || userSequence.length >= matrixSequence.length) return;
+        userSequence.push(idx);
+        let boxes = document.querySelectorAll('.matrix-box');
+        let currentStep = userSequence.length - 1;
+
+        if(userSequence[currentStep] !== matrixSequence[currentStep]) {
+            boxes[idx].classList.add('fail-blink');
+            setTimeout(() => { boxes[idx].classList.remove('fail-blink'); alert("Wrong Order! Dhyan se dekhkar firse try karein."); userSequence = []; }, 300);
+            return;
+        }
+        boxes[idx].classList.add('success-blink');
+        setTimeout(() => boxes[idx].classList.remove('success-blink'), 200);
+
+        if(userSequence.length === matrixSequence.length) {
+            matrixReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+            document.getElementById('matrix-grid').style.pointerEvents = 'none';
+            const mClaim = document.getElementById('claim-matrix-btn');
+            mClaim.innerText = `Claim ${matrixReward} Coins`; mClaim.style.display = 'block';
+
+            const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); const today = new Date().toDateString();
+            if(userData.lastMatrixPlayed !== today) { userData.lastMatrixPlayed = today; userData.matrixChances = 1; } 
+            else { userData.matrixChances = (userData.matrixChances || 0) + 1; }
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        }
+    }
+    function claimMatrixCoins() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += matrixReward;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload();
+    }
+
+    // --- GAME 4: MATH RUSH ENGINE ---
+    function startMathGame() {
+        mathScore = 0; document.getElementById('math-score').innerText = mathScore;
+        document.getElementById('play-math-btn').style.display = 'none';
+        document.getElementById('math-container').style.display = 'block';
+        nextMathQuestion();
+    }
+    function nextMathQuestion() {
+        if(mathScore >= 5) {
+            clearInterval(mathInterval);
+            mathReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+            const mClaimBtn = document.getElementById('claim-math-btn');
+            mClaimBtn.innerText = `Claim ${mathReward} Coins`; mClaimBtn.style.display = 'block';
+            document.getElementById('math-options').innerHTML = '';
+
+            const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); const today = new Date().toDateString();
+            if(userData.lastMathPlayed !== today) { userData.lastMathPlayed = today; userData.mathChances = 1; } 
+            else { userData.mathChances = (userData.mathChances || 0) + 1; }
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+            return;
+        }
+        clearInterval(mathInterval);
+        let n1 = Math.floor(Math.random() * 12) + 4; let n2 = Math.floor(Math.random() * 9) + 2;
+        let ops = ['+', '-', '*']; let op = ops[Math.floor(Math.random() * ops.length)];
+        if(op === '*') { n1 = Math.floor(Math.random() * 8) + 2; n2 = Math.floor(Math.random() * 6) + 2; }
+        
+        correctAns = eval(`${n1} ${op} ${n2}`);
+        document.getElementById('math-question').innerText = `${n1} ${op} ${n2} = ?`;
+
+        let opts = [correctAns, correctAns + Math.floor(Math.random() * 4) + 1, correctAns - Math.floor(Math.random() * 3) - 1];
+        opts.sort(() => Math.random() - 0.5);
+
+        let optDiv = document.getElementById('math-options'); optDiv.innerHTML = '';
+        opts.forEach(o => { optDiv.innerHTML += `<button class="math-btn" onclick="checkMathAns(${o})">${o}</button>`; });
+
+        mathTimeLeft = 100;
+        mathInterval = setInterval(() => {
+            mathTimeLeft -= 2.5; document.getElementById('math-timer-fill').style.width = mathTimeLeft + '%';
+            if(mathTimeLeft <= 0) { clearInterval(mathInterval); alert("Time Up! Sabhi 5 answers lagatar sahi dene honge."); mathScore = 0; document.getElementById('math-score').innerText = mathScore; nextMathQuestion(); }
+        }, 100);
+    }
+    function checkMathAns(chosen) {
+        if(chosen === correctAns) { mathScore++; document.getElementById('math-score').innerText = mathScore; nextMathQuestion(); } 
+        else { alert("Wrong Answer! Game reset."); mathScore = 0; document.getElementById('math-score').innerText = mathScore; nextMathQuestion(); }
+    }
+    function claimMathCoins() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += mathReward;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload();
+    }
+
+    function logout() { localStorage.removeItem('logged_in_user'); location.reload(); }
+</script>
+
+</body>
+</html>
