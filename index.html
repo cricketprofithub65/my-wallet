@@ -15,6 +15,7 @@
         .balance-card { background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 12px; margin-top: 15px; backdrop-filter: blur(5px); }
         .balance-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
         .balance-amount { font-size: 28px; font-weight: 700; margin-top: 2px; }
+        .rupee-value { font-size: 14px; font-weight: 600; color: #facc15; margin-top: 5px; }
         
         .content-section { padding: 20px; display: none; flex-grow: 1; }
         .content-section.active { display: block; }
@@ -45,11 +46,13 @@
         .statement-item { background: #fff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
         
         .share-box { background: #e0e7ff; color: #4338ca; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; word-break: break-all; margin-top: 10px; border: 1px dashed #6366f1; }
+        .section-title { font-size: 16px; font-weight: 700; color: #1f2937; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <!-- Auth Screen -->
     <div id="auth-screen" class="auth-container">
         <h2 style="margin-bottom: 20px; text-align: center; font-weight: 700; color: #1f2937;">Secure Wallet</h2>
         <form onsubmit="handleAuth(event)">
@@ -65,6 +68,7 @@
         </form>
     </div>
 
+    <!-- Main Dashboard -->
     <div id="main-app" style="display: none;">
         <div class="header">
             <h1>Earn Wallet</h1>
@@ -72,29 +76,91 @@
             <div class="balance-card">
                 <div class="balance-label">Your Balance</div>
                 <div class="balance-amount"><span id="coin-balance">0</span> Coins</div>
+                <div class="rupee-value">Estimated Value: ₹<span id="rupee-balance">0.00</span></div>
             </div>
         </div>
 
+        <!-- Section 1: Tasks -->
         <div id="tasks-section" class="content-section active">
+            <!-- Normal Rewards -->
             <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
                         <h3>Join Telegram Channel</h3>
-                        <p style="color: #4f46e5;">+30 Coins</p>
+                        <p style="color: #4f46e5;">+10 Coins</p>
                     </div>
                     <button id="tg-join-btn" onclick="claimTelegramCoins()" class="btn btn-primary">Join Now</button>
                 </div>
             </div>
-            <div class="task-card" style="margin-top: 15px;">
+            <div class="task-card">
                 <div class="task-header">
                     <div class="task-info">
                         <h3>Daily Reward Check-in</h3>
-                        <p style="color: #10b981;">+10 Coins</p>
+                        <p style="color: #10b981;">+2 Coins</p>
                     </div>
                     <button id="daily-btn" onclick="claimDailyReward()" class="btn btn-primary" style="background:#10b981;">Claim</button>
                 </div>
             </div>
+
+            <!-- Sports Arena Tasks (1 Day Lock Script Enabled) -->
+            <div class="section-title">🎮 Sports Arena Tasks (Daily 1 Time)</div>
+
+            <!-- Task 1: Cricket -->
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Fantasy Cricket Challenge</h3>
+                        <p style="color: #10b981;">+5 Coins</p>
+                    </div>
+                    <button id="sport-cricket" onclick="claimSportReward('Cricket', 5)" class="btn btn-primary" style="background: #0284c7;">Play</button>
+                </div>
+            </div>
+
+            <!-- Task 2: Football -->
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Penalty Shootout Arena</h3>
+                        <p style="color: #10b981;">+6 Coins</p>
+                    </div>
+                    <button id="sport-football" onclick="claimSportReward('Football', 6)" class="btn btn-primary" style="background: #059669;">Kick</button>
+                </div>
+            </div>
+
+            <!-- Task 3: Gaming -->
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Esports Speed Racing</h3>
+                        <p style="color: #10b981;">+8 Coins</p>
+                    </div>
+                    <button id="sport-gaming" onclick="claimSportReward('Gaming', 8)" class="btn btn-primary" style="background: #ea580c;">Race</button>
+                </div>
+            </div>
+
+            <!-- Task 4: Ludo -->
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Quick Ludo Dice Roll</h3>
+                        <p style="color: #10b981;">+4 Coins</p>
+                    </div>
+                    <button id="sport-ludo" onclick="claimSportReward('Ludo', 4)" class="btn btn-primary" style="background: #dc2626;">Roll</button>
+                </div>
+            </div>
+
+            <!-- Task 5: Squash -->
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Squash Wall Target</h3>
+                        <p style="color: #10b981;">+5 Coins</p>
+                    </div>
+                    <button id="sport-squash" onclick="claimSportReward('Squash', 5)" class="btn btn-primary" style="background: #7c3aed;">Hit</button>
+                </div>
+            </div>
             
+            <!-- Redeem System -->
             <div class="task-card" style="margin-top: 15px; border: 1px dashed #4f46e5; background: #f5f3ff;">
                 <h3 style="font-size: 15px; font-weight: 600; color: #4f46e5; margin-bottom: 5px;">🎁 Have a Redeem Code?</h3>
                 <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">Telegram se code copy karke yahan claim karein!</p>
@@ -105,15 +171,17 @@
             </div>
         </div>
 
+        <!-- Section 2: Invite (Refer Reward Updated to 25 Coins) -->
         <div id="invite-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 10px; color: #1f2937;">🔑 Refer & Earn</h3>
-                <p style="font-size: 13px; color: #4b5563; line-height: 1.5;">Apne dosto ko invite karein aur har successful registration par payein <span style="color:#10b981; font-weight:bold;">+50 Coins</span> turant!</p>
+                <p style="font-size: 13px; color: #4b5563; line-height: 1.5;">Apne dosto ko invite karein aur har successful registration par payein <span style="color:#10b981; font-weight:bold;">+25 Coins</span> turant!</p>
                 <div class="share-box" id="refer-link-box">Loading dynamic refer link...</div>
                 <button onclick="copyReferLink()" class="btn btn-success" style="margin-top: 12px; background:#4f46e5;">Copy Refer Link</button>
             </div>
         </div>
 
+        <!-- Section 3: Bank (Min Withdrawal Set to 100 Coins) -->
         <div id="withdraw-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">Bank Settlement Panel</h3>
@@ -122,12 +190,13 @@
                     <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name" placeholder="e.g. Bank of Baroda" required></div>
                     <div class="form-group"><label>Account Number</label><input type="text" id="account-number" placeholder="Enter account number" required></div>
                     <div class="form-group"><label>Branch IFSC Code</label><input type="text" id="ifsc-code" placeholder="Enter IFSC code" required></div>
-                    <div class="form-group"><label>Coins to Redeem (Min 200)</label><input type="number" id="withdraw-amount" min="200" placeholder="Minimum 200" required></div>
+                    <div class="form-group"><label>Coins to Redeem (Min 100)</label><input type="number" id="withdraw-amount" min="100" placeholder="Minimum 100" required></div>
                     <button type="submit" id="withdraw-submit-btn" class="btn btn-success">Submit Settlement</button>
                 </form>
             </div>
         </div>
 
+        <!-- Section 4: Profile -->
         <div id="profile-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">My Profile</h3>
@@ -144,6 +213,7 @@
             </div>
         </div>
 
+        <!-- Footer Navigation -->
         <div class="bottom-nav">
             <div class="nav-item active" id="nav-tasks" onclick="switchTab('tasks')"><span class="icon">📋</span><div>Tasks</div></div>
             <div class="nav-item" id="nav-invite" onclick="switchTab('invite')"><span class="icon">🎁</span><div>Invite</div></div>
@@ -154,7 +224,6 @@
 </div>
 
 <script>
-    // 📢 AAPKA UPDATED NEW LIVE URL AUTOMATICALLY SET
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxm2LVnM9ebtj1pluyl7924I408p_MSLzZXHCtnAzANwnrbogiiTp4VBfGN93ulYNeKA/exec";
     let currentUser = localStorage.getItem('logged_in_user') || null;
 
@@ -167,29 +236,45 @@
         }
     };
 
+    // 🔒 SECURE LOGIN VALIDATION SYNCED WITH SPREADSHEET
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
         const mobile = document.getElementById('auth-mobile').value.trim();
         const password = document.getElementById('auth-password').value.trim();
         
-        authBtn.disabled = true;
-        authBtn.innerText = "Syncing User...";
+        if (!mobile || !password) return alert("Please fill all details!");
 
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ action: "register", mobile: mobile, password: password })
-        })
-        .then(() => {
-            localStorage.setItem('logged_in_user', mobile);
-            alert("Account Linked Successfully!");
-            location.reload();
+        authBtn.disabled = true;
+        authBtn.innerText = "Checking Credentials...";
+
+        fetch(`${GOOGLE_SCRIPT_URL}?action=loginCheck&mobile=${mobile}&password=${password}`)
+        .then(res => res.json())
+        .then(response => {
+            if (response.status === "success" || response.message === "Login Successful" || response.message === "Registration Successful") {
+                localStorage.setItem('logged_in_user', mobile);
+                alert("Access Granted! Sync Successful.");
+                location.reload();
+            } else {
+                alert("❌ Auth Error: " + (response.message || "Invalid Secret PIN or Mobile!"));
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            }
         })
         .catch(() => {
-            localStorage.setItem('logged_in_user', mobile);
-            location.reload();
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ action: "register", mobile: mobile, password: password })
+            }).then(() => {
+                localStorage.setItem('logged_in_user', mobile);
+                location.reload();
+            }).catch(() => {
+                alert("Server Connection Issue. Please check Web App Deployment!");
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            });
         });
     }
 
@@ -205,14 +290,46 @@
         updateLiveBalance();
     }
 
+    // 💰 LIVE BALANCE SYNC (10 Coins = ₹1)
     function updateLiveBalance() {
         fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
         .then(res => res.json())
         .then(res => {
-            document.getElementById('coin-balance').innerText = res.balance;
+            const coins = parseInt(res.balance) || 0;
+            document.getElementById('coin-balance').innerText = coins;
+            const rupees = (coins / 10).toFixed(2);
+            document.getElementById('rupee-balance').innerText = rupees;
         })
         .catch(() => {
             document.getElementById('coin-balance').innerText = "0";
+            document.getElementById('rupee-balance').innerText = "0.00";
+        });
+    }
+
+    // 🏆 DAILY 1 DAY LOCK LOGIC FOR SPORTS
+    function claimSportReward(sportName, coinsReward) {
+        const todayDate = new Date().toDateString(); // Fetch unique string for current day
+        const storageKey = `claimed_sport_${sportName}_${currentUser}`;
+        const savedDate = localStorage.getItem(storageKey);
+
+        if (savedDate === todayDate) {
+            return alert(`⚠️ Aap aaj ka ${sportName} task pehle hi complete kar chuke hain! Kal dobara koshish karein.`);
+        }
+
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + coinsReward;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            localStorage.setItem(storageKey, todayDate); // Lock saved for 1 day
+            alert(`🎉 Success! +${coinsReward} Coins added for playing ${sportName}.`);
+            location.reload();
+        }).catch(() => {
+            alert("Error updating coins. Try again.");
         });
     }
 
@@ -271,7 +388,6 @@
         }
     }
 
-    // ONLY 1 REDEEM CODE FUNCTION
     function claimRedeemCode() {
         const codeInput = document.getElementById('promo-code-input').value.trim().toUpperCase();
         const claimBtn = document.getElementById('promo-claim-btn');
@@ -279,7 +395,6 @@
         if(!codeInput) return alert("Please enter a code!");
 
         let coinReward = 0;
-        
         if (codeInput === "TELEGRAM30") {
             coinReward = 30;
         } else {
@@ -308,13 +423,15 @@
         });
     }
 
+    // 🏦 SECURE WITHDRAWAL WITH 100 COINS MINIMUM LIMIT
     function handleWithdraw(event) {
         event.preventDefault();
         const submitBtn = document.getElementById('withdraw-submit-btn');
         const amount = parseInt(document.getElementById('withdraw-amount').value);
         const currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
 
-        if(currentBal < amount) return alert("Wallet Balance is too low!");
+        if (amount < 100) return alert("Minimum withdrawal limit is 100 Coins!");
+        if (currentBal < amount) return alert("Wallet Balance is too low!");
 
         submitBtn.disabled = true;
         submitBtn.innerText = "Processing settlement...";
@@ -352,21 +469,6 @@
     function claimTelegramCoins() {
         window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
         let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
-        let newBal = currentBal + 30;
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
-        }).then(() => {
-            alert("🎉 +30 Coins Added Successfully!");
-            location.reload();
-        });
-    }
-
-    function claimDailyReward() {
-        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
         let newBal = currentBal + 10;
 
         fetch(GOOGLE_SCRIPT_URL, {
@@ -375,7 +477,28 @@
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
         }).then(() => {
-            alert("🎉 Daily Reward check-in successful (+10 Coins)!");
+            alert("🎉 +10 Coins Added Successfully!");
+            location.reload();
+        });
+    }
+
+    function claimDailyReward() {
+        const todayDate = new Date().toDateString();
+        if (localStorage.getItem(`claimed_daily_${currentUser}`) === todayDate) {
+            return alert("⚠️ Daily Reward aaj pehle hi claim ho chuka hai!");
+        }
+
+        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
+        let newBal = currentBal + 2;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
+        }).then(() => {
+            localStorage.setItem(`claimed_daily_${currentUser}`, todayDate);
+            alert("🎉 Daily Reward check-in successful (+2 Coins)!");
             location.reload();
         });
     }
