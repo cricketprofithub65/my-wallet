@@ -220,7 +220,6 @@
 </div>
 
 <script>
-    // AAPKA NAYA DEPLOYED WEB APP URL DALA GAYA HAI
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOg0bykSHJu-ab7indSC7KrOsHgOhqQU4poB-HBWvS9UxC8S7e8kP9Xjt-WeGprFGAxw/exec";
     
     let currentUser = localStorage.getItem('logged_in_user') || null;
@@ -235,6 +234,7 @@
         }
     };
 
+    // --- UPDATED LOGIN / REGISTRATION LOGIC ---
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -242,16 +242,14 @@
         const password = document.getElementById('auth-password').value.trim();
         if(!mobile || !password) return alert("Please fill all fields!");
         
-        let userData = localStorage.getItem('user_' + mobile);
-        if(!userData) {
-            authBtn.disabled = true;
-            authBtn.innerText = "Registering on Sheet...";
+        authBtn.disabled = true;
+        authBtn.innerText = "Checking Credentials...";
 
-            const payload = {
-                action: "register",
-                mobile: mobile,
-                password: password
-            };
+        let localUserData = localStorage.getItem('user_' + mobile);
+
+        if(!localUserData) {
+            // Agar local database me user nahi hai, toh check karo sheet me hai ya naya banana hai
+            const payload = { action: "register", mobile: mobile, password: password };
 
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
@@ -265,7 +263,6 @@
 
                 const urlParams = new URLSearchParams(window.location.search);
                 const referrerMobile = urlParams.get('ref');
-                
                 if(referrerMobile && referrerMobile !== mobile) {
                     let referrerData = localStorage.getItem('user_' + referrerMobile);
                     if(referrerData) {
@@ -279,15 +276,18 @@
                 localStorage.setItem('logged_in_user', mobile);
                 showMainApp();
             })
-            .catch(err => {
+            .catch(() => {
                 alert("Sheet Connection Error!");
                 authBtn.disabled = false;
                 authBtn.innerText = "Login / Register";
             });
 
         } else {
-            const existingUser = JSON.parse(userData);
+            // Agar purana user hai, toh PIN mismatch hone par error dega
+            const existingUser = JSON.parse(localUserData);
             if(existingUser.password !== password) {
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
                 return alert("Incorrect Secret PIN! Please enter correct PIN.");
             }
             currentUser = mobile;
@@ -296,7 +296,6 @@
         }
     }
 
-    // LIVE REFRESH COINS AND INITIALIZE APP
     function showMainApp() {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
@@ -304,10 +303,9 @@
         document.getElementById('prof-mobile').innerText = currentUser;
         document.getElementById('refer-link-display').innerText = window.location.href.split('?')[0] + "?ref=" + currentUser;
 
-        // Balance loading animation text
         document.getElementById('coin-balance').innerText = "...";
 
-        // Fetch Fresh live Balance from Users sheet on Login/App open
+        // Live Fresh Balance Check From Users Sheet
         fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
         .then(res => res.json())
         .then(res => {
@@ -321,4 +319,298 @@
             document.getElementById('coin-balance').innerText = userData.balance || 0;
         });
         
-        let
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser)) || { tgJoined: false };
+        if(userData.tgJoined) {
+            const tgBtn = document.getElementById('tg-join-btn');
+            if(tgBtn) {
+                tgBtn.disabled = true;
+                tgBtn.innerText = "Joined";
+                tgBtn.style.background = "#6b7280";
+            }
+        }
+        checkDailyLimits();
+    }
+
+    function claimTelegramCoins() {
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        if(userData.tgJoined) return alert("Aapne pehle hi join kar liya hai!");
+        
+        window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
+        
+        userData.balance = (userData.balance || 0) + 30;
+        userData.tgJoined = true;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: userData.balance })
+        }).then(() => {
+            alert("🎉 Telegram Join karne ke liye 30 Coins credit kar diye gaye hain!");
+            location.reload();
+        });
+    }
+
+    function checkDailyLimits() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        const today = new Date().toDateString();
+        if(userData.lastPlayed === today) {
+            document.getElementById('play-sport-btn').disabled = true;
+            document.getElementById('play-sport-btn').innerText = "Played Today";
+        }
+        if(userData.lastFootballPlayed === today) {
+            document.getElementById('play-football-btn').disabled = true;
+            document.getElementById('play-football-btn').innerText = "Played Today";
+        }
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabName + '-section').classList.add('active');
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
+        document.getElementById('nav-' + tabName).classList.add('active');
+    }
+
+    function toggleStatement() {
+        const box = document.getElementById('statement-box');
+        const listContainer = document.getElementById('statement-list');
+
+        if(box.style.display === 'block') {
+            box.style.display = 'none';
+        } else {
+            box.style.display = 'block';
+            listContainer.innerHTML = '<p style="font-size:12px;color:#4b5563;text-align:center;padding:10px;">Loading data live from Sheet...</p>';
+            
+            fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
+            .then(res => res.json())
+            .then(history => {
+                listContainer.innerHTML = '';
+                if(!history || history.length === 0) {
+                    listContainer.innerHTML = '<p style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">No transactions found.</p>';
+                    return;
+                }
+
+                for(let i = history.length - 1; i >= 0; i--) {
+                    let tx = history[i];
+                    let statusText = tx.status || "Pending"; 
+                    let statusColor = "#f59e0b"; 
+                    
+                    if(statusText.toLowerCase() === "success") { statusColor = "#10b981"; }
+                    else if(statusText.toLowerCase() === "processing") { statusColor = "#3b82f6"; }
+
+                    listContainer.innerHTML += `
+                        <div class="statement-item">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                                <span style="color:#ef4444;">-${tx.amount} Coins</span>
+                                <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
+                            </div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (****${tx.accNum})</div>
+                            <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                listContainer.innerHTML = '<p style="font-size:12px;color:#ef4444;text-align:center;padding:10px;">Failed to load live data.</p>';
+            });
+        }
+    }
+
+    function handleWithdraw(event) {
+        event.preventDefault();
+        const submitBtn = document.getElementById('withdraw-submit-btn');
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        
+        const bankTitle = document.getElementById('bank-title').value.trim();
+        const bankName = document.getElementById('bank-name').value.trim();
+        const accountNumber = document.getElementById('account-number').value.trim();
+        const ifscCode = document.getElementById('ifsc-code').value.trim();
+        const amount = parseInt(document.getElementById('withdraw-amount').value);
+
+        if(userData.balance < amount) return alert("Low balance!");
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Sending to Sheet...";
+
+        const payload = {
+            action: "withdraw",
+            mobile: currentUser,
+            bankTitle: bankTitle,
+            bankName: bankName,
+            accountNumber: accountNumber,
+            ifscCode: ifscCode,
+            amount: amount
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            userData.balance -= amount;
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: userData.balance })
+            }).then(() => {
+                alert("🎉 Request registered successfully inside Google Sheet!");
+                location.reload();
+            });
+        })
+        .catch(err => {
+            alert("Network Error!");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Settlement";
+        });
+    }
+
+    function copyReferLink() {
+        const linkText = document.getElementById('refer-link-display').innerText;
+        navigator.clipboard.writeText(linkText).then(() => alert("Link copied!"));
+    }
+
+    function logout() {
+        localStorage.removeItem('logged_in_user');
+        location.reload();
+    }
+
+    // --- CRICKET ENGINE ---
+    function startCricketGame() {
+        score = 0; wickets = 0;
+        document.getElementById('game-score').innerText = score;
+        document.getElementById('game-wickets').innerText = wickets;
+        document.getElementById('play-sport-btn').style.display = 'none';
+        document.getElementById('game-pitch').style.display = 'block';
+        setTimeout(deliverBall, 1200);
+    }
+    function deliverBall() {
+        if(score >= 20 || wickets >= 2) return;
+        isBallFlying = true; isBatSwung = false; ballPositionTop = 30; ballScale = 0.5;
+        if (score <= 6) { currentBallSpeed = 26; } else if (score <= 12) { currentBallSpeed = 16; } else { currentBallSpeed = 10; }
+        const ball = document.getElementById('live-ball');
+        ball.style.display = 'block'; ball.style.top = ballPositionTop + 'px';
+        ball.style.left = `calc(50% + ${(Math.random() * 24) - 12}px)`;
+        ballTimer = setInterval(() => {
+            ballPositionTop += 5; ballScale += 0.035;
+            ball.style.top = ballPositionTop + 'px';
+            ball.style.transform = `translateX(-50%) scale(${ballScale})`;
+            if(ballPositionTop >= 180 && ballPositionTop <= 215 && isBatSwung) {
+                clearInterval(ballTimer); isBallFlying = false; ball.style.display = 'none';
+                const runs = Math.random() > 0.5 ? 4 : 6; score += runs;
+                document.getElementById('game-score').innerText = score;
+                if(score >= 20) { endGame(true); } else { setTimeout(deliverBall, 1500); }
+            }
+            if(ballPositionTop >= 230) {
+                clearInterval(ballTimer); isBallFlying = false; ball.style.display = 'none';
+                wickets++; document.getElementById('game-wickets').innerText = wickets;
+                if(wickets >= 2) { endGame(false); } else { setTimeout(deliverBall, 1500); }
+            }
+        }, currentBallSpeed);
+    }
+    function swingBat() { if(!isBallFlying || isBatSwung) return; isBatSwung = true; document.getElementById('batsman').classList.add('swinging'); setTimeout(() => document.getElementById('batsman').classList.remove('swinging'), 150); }
+    
+    function endGame(isWon) {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        userData.lastPlayed = new Date().toDateString();
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        if(isWon) { document.getElementById('game-pitch').style.pointerEvents = 'none'; document.getElementById('claim-sport-btn').style.display = 'block'; } 
+        else { alert("ALL OUT!"); location.reload(); }
+    }
+    function claimSportCoins() { 
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+        userData.balance += 40; 
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: userData.balance })
+        }).then(() => {
+            location.reload(); 
+        });
+    }
+
+    // --- FOOTBALL ENGINE ---
+    function startFootballGame() { 
+        footballScore = 0; 
+        document.getElementById('play-football-btn').style.display = 'none'; 
+        document.getElementById('football-pitch').style.display = 'block'; 
+        keeperInterval = setInterval(moveKeeper, 700); 
+    }
+    function moveKeeper() { 
+        const keeper = document.getElementById('goalkeeper'); 
+        keeper.style.left = [20, 35, 50, 65, 80][Math.floor(Math.random() * 5)] + "%"; 
+    }
+    function shootFootball(playerTarget) {
+        if(isBallMoving || footballScore >= 5) return; 
+        isBallMoving = true;
+        const ball = document.getElementById('soccer-ball'); 
+        const keeper = document.getElementById('goalkeeper'); 
+        const line = document.getElementById('kick-line');
+        let angle = playerTarget === 20 ? -30 : (playerTarget === 80 ? 30 : 0);
+        
+        line.style.opacity = '1'; 
+        line.style.height = '140px'; 
+        line.style.transform = `rotate(${angle}deg)`;
+        
+        setTimeout(() => {
+            ball.style.bottom = '140px';
+            ball.style.left = playerTarget + '%';
+            ball.style.transform = 'translateX(-50%) scale(0.6)';
+            
+            setTimeout(() => {
+                let keeperPos = parseInt(keeper.style.left);
+                if(Math.abs(keeperPos - playerTarget) < 15) {
+                    alert("🧤 SAVED BY KEEPER!");
+                    resetFootballBall();
+                } else {
+                    footballScore++;
+                    document.getElementById('football-score').innerText = footballScore;
+                    if(footballScore >= 5) {
+                        clearInterval(keeperInterval);
+                        document.getElementById('football-pitch').style.pointerEvents = 'none';
+                        document.getElementById('claim-football-btn').style.display = 'block';
+                    } else {
+                        resetFootballBall();
+                    }
+                }
+            }, 400);
+        }, 200);
+    }
+    function resetFootballBall() {
+        const ball = document.getElementById('soccer-ball');
+        const line = document.getElementById('kick-line');
+        ball.style.bottom = '20px';
+        ball.style.left = '50%';
+        ball.style.transform = 'translateX(-50%) scale(1)';
+        line.style.opacity = '0';
+        line.style.height = '0px';
+        isBallMoving = false;
+    }
+    function claimFootballCoins() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        userData.balance += 20;
+        userData.lastFootballPlayed = new Date().toDateString();
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: userData.balance })
+        }).then(() => {
+            location.reload();
+        });
+    }
+</script>
+</body>
+</html>
