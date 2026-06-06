@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earn Wallet</title>
+    <title>Secure Earn Wallet</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #f3f4f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding-bottom: 65px; }
+        body { background: #f3f4f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 0; padding-bottom: 65px; }
         .app-container { background: #fff; width: 100%; max-width: 400px; min-height: 100vh; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
         
-        .header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; padding: 25px 20px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+        .header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; padding: 25px 20px; text-align: center; position: relative; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
         .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 5px; }
         
         .balance-card { background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 12px; margin-top: 15px; backdrop-filter: blur(5px); }
@@ -20,7 +20,7 @@
         .content-section.active { display: block; }
         
         .task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .task-header { display: flex; justify-content: space-between; align-items: center; }
+        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .task-info h3 { font-size: 15px; font-weight: 600; color: #1f2937; }
         .task-info p { font-size: 13px; color: #10b981; font-weight: 600; margin-top: 2px; }
         
@@ -33,24 +33,56 @@
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; }
         .form-group input { width: 100%; padding: 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; }
         
+        /* Input styling for Redeem Panel inside Task card */
+        .task-input { width: 100%; padding: 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; margin-top: 8px; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 400px; background: #ffffff; display: flex; border-top: 1px solid #e5e7eb; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 100; }
-        .nav-item { flex: 1; text-align: center; padding: 12px 0; color: #6b7280; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-item { flex: 1; text-align: center; padding: 12px 0; color: #6b7280; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .nav-item span.icon { font-size: 18px; margin-bottom: 2px; }
         .nav-item.active { color: #4f46e5; background: #f9fafb; }
 
         .auth-container { padding: 30px 25px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background: #fff; }
+        
+        /* Games Styling */
+        .game-pitch { width: 100%; height: 260px; background: #4caf50; border-radius: 12px; margin-top: 10px; position: relative; overflow: hidden; display: none; border: 3px solid #2e7d32; box-shadow: inset 0 0 40px rgba(0,0,0,0.3); cursor: pointer; }
+        .cricket-crease { position: absolute; bottom: 40px; left: 10%; width: 80%; height: 4px; background: rgba(255,255,255,0.7); }
+        .bowling-machine { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 35px; height: 35px; background: #374151; border-radius: 6px; border: 2px solid #9ca3af; text-align: center; color: white; font-size: 9px; font-weight: bold; line-height: 30px; }
+        .stumps-container { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; z-index: 5; transition: transform 0.2s; }
+        .stump { width: 4px; height: 32px; background: #f59e0b; border-radius: 2px; }
+        .batsman-container { position: absolute; bottom: 12px; left: 38%; width: 50px; height: 60px; z-index: 10; }
+        .batsman-body { width: 8px; height: 25px; background: #1e3a8a; margin: 0 auto; border-radius: 4px; position: relative; }
+        .batsman-head { width: 12px; height: 12px; background: #ffedd5; border-radius: 50%; position: absolute; top: -14px; left: -2px; border: 1px solid #1e3a8a; }
+        .batsman-bat { width: 4px; height: 28px; background: #b45309; position: absolute; bottom: 2px; left: -8px; transform-origin: top center; transform: rotate(20deg); transition: transform 0.12s ease-out; border-radius: 1px; }
+        .batsman-container.swinging .batsman-bat { transform: rotate(-110deg) scaleY(1.1); background: #ef4444; }
+        .live-ball { width: 14px; height: 14px; background: #dc2626; border: 1.5px solid #fff; border-radius: 50%; position: absolute; top: 30px; left: 50%; transform: translateX(-50%) scale(0.5); display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.4); z-index: 15; }
+        
+        .football-pitch { width: 100%; height: 220px; background: #2e7d32; border-radius: 12px; margin-top: 10px; position: relative; overflow: hidden; display: none; border: 3px solid #1b5e20; box-shadow: inset 0 0 30px rgba(0,0,0,0.4); }
+        .goalpost { width: 80%; height: 80px; border: 4px solid #fff; border-bottom: none; position: absolute; top: 15px; left: 10%; background: rgba(255,255,255,0.1); border-radius: 4px 4px 0 0; }
+        .goalkeeper { width: 30px; height: 30px; background: #ff9800; border-radius: 50%; position: absolute; top: 55px; left: 50%; transform: translateX(-50%); transition: left 0.35s ease-in-out; border: 2px solid #fff; text-align: center; font-size: 14px; line-height: 26px; z-index: 10; }
+        .soccer-ball { width: 22px; height: 22px; background: #fff; border: 2px solid #000; border-radius: 50%; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 12; box-shadow: 0 4px 5px rgba(0,0,0,0.3); pointer-events: none; }
+        
+        .shoot-target { position: absolute; top: 25px; width: 45px; height: 25px; background: rgba(239, 68, 68, 0.8); border: 2px dashed #fff; border-radius: 4px; color: #fff; font-size: 9px; font-weight: 700; text-align: center; line-height: 21px; cursor: pointer; z-index: 20; transition: transform 0.1s; }
+        .shoot-target:active { transform: scale(0.9); }
+        .target-left { left: 15%; }
+        .target-center { left: 50%; transform: translateX(-50%); }
+        .target-right { right: 15%; }
+        .kick-line { position: absolute; bottom: 31px; left: 50%; width: 2px; height: 0px; background: linear-gradient(to top, rgba(255,255,255,0.8), rgba(255,255,255,0)); transform-origin: bottom center; transition: all 0.3s ease; opacity: 0; z-index: 8; }
+        
+        .refer-box { background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 12px; padding: 15px; text-align: center; margin-top: 15px; }
+        .refer-code-text { font-size: 16px; font-weight: 700; color: #2563eb; word-break: break-all; margin: 10px 0; }
+        
         .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
         .profile-label { color: #6b7280; font-weight: 500; }
         .profile-value { color: #1f2937; font-weight: 600; }
+
+        /* Statement Box UI */
         .statement-item { background: #fff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
-        
-        .share-box { background: #e0e7ff; color: #4338ca; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; word-break: break-all; margin-top: 10px; border: 1px dashed #6366f1; }
+        .statement-item div { margin-bottom: 3px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Auth Screen -->
     <div id="auth-screen" class="auth-container">
         <h2 style="margin-bottom: 20px; text-align: center; font-weight: 700; color: #1f2937;">Secure Wallet</h2>
         <form onsubmit="handleAuth(event)">
@@ -66,21 +98,26 @@
         </form>
     </div>
 
-    <!-- Main Dashboard -->
     <div id="main-app" style="display: none;">
         <div class="header">
             <h1>Earn Wallet</h1>
-            <div style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Active Session: <span id="display-user" style="color: #facc15; font-weight: 700;">None</span></div>
+            <div style="font-size: 13px; opacity: 0.8; margin-top: 3px;">Active Session: <span id="display-user">None</span></div>
             <div class="balance-card">
                 <div class="balance-label">Your Balance</div>
                 <div class="balance-amount"><span id="coin-balance">0</span> Coins</div>
             </div>
         </div>
 
-        <!-- Section 1: Tasks -->
         <div id="tasks-section" class="content-section active">
+            
             <div class="task-card">
-                <div class="task-header">
+                <h3 style="font-size: 15px; font-weight: 600; color: #1f2937;">Redeem Code</h3>
+                <input type="text" id="redeem-code" class="task-input" placeholder="Enter Redeem Code">
+                <button class="btn btn-success" onclick="redeemCode()">Redeem</button>
+            </div>
+
+            <div class="task-card">
+                <div class="task-header" style="margin-bottom: 0;">
                     <div class="task-info">
                         <h3>Join Telegram Channel</h3>
                         <p style="color: #4f46e5;">+30 Coins</p>
@@ -88,43 +125,84 @@
                     <button id="tg-join-btn" onclick="claimTelegramCoins()" class="btn btn-primary">Join Now</button>
                 </div>
             </div>
-            <div class="task-card" style="margin-top: 15px;">
+
+            <div class="task-card" id="sport-task-card">
                 <div class="task-header">
                     <div class="task-info">
-                        <h3>Daily Reward Check-in</h3>
-                        <p style="color: #10b981;">+10 Coins</p>
+                        <h3>Daily Live Cricket Match</h3>
+                        <p style="color: #4f46e5;">+40 Coins (Target: 20 Runs)</p>
                     </div>
-                    <button id="daily-btn" onclick="claimDailyReward()" class="btn btn-primary" style="background:#10b981;">Claim</button>
+                    <button class="btn btn-primary" id="play-sport-btn" onclick="startCricketGame()">Play Match</button>
+                </div>
+                <p id="sport-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Pehle Slow ball aayegi, runs badhne par Fast hoti jayegi. 2 Wickets hain!</p>
+                
+                <div class="game-pitch" id="game-pitch" onclick="swingBat()">
+                    <div style="position: absolute; top: 8px; left: 12px; color: white; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; z-index: 30; display: flex; gap: 15px;">
+                        <div>Runs: <span id="game-score" style="color: #facc15;">0</span>/20</div>
+                        <div>Wickets: <span id="game-wickets" style="color: #ef4444;">0</span>/2</div>
+                    </div>
+                    <div id="match-msg" style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #fff; background: rgba(0,0,0,0.7); padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; display: none; z-index: 40;"></div>
+                    <div class="bowling-machine">🤖</div>
+                    <div class="cricket-crease"></div>
+                    <div class="stumps-container" id="stumps"><div class="stump"></div><div class="stump"></div><div class="stump"></div></div>
+                    <div class="batsman-container" id="batsman"><div class="batsman-body"><div class="batsman-head"></div><div class="batsman-bat" id="bat"></div></div></div>
+                    <div class="live-ball" id="live-ball"></div>
+                </div>
+                <button class="btn btn-success" id="claim-sport-btn" onclick="claimSportCoins()" style="display: none; width: 100%;">Claim 40 Coins</button>
+            </div>
+
+            <div class="task-card" id="football-task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Football Penalty Kick</h3>
+                        <p style="color: #10b981;">+20 Coins (Target: 5 Goals)</p>
+                    </div>
+                    <button class="btn btn-primary" id="play-football-btn" onclick="startFootballGame()">Play Football</button>
+                </div>
+                <p id="football-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Khali Target Box par click karein. Ball real line ke raste wahi shoot hogi!</p>
+                
+                <div class="football-pitch" id="football-pitch">
+                    <div style="position: absolute; top: 15px; left: 15px; color: white; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; z-index: 30;">
+                        Goals: <span id="football-score" style="color: #10b981;">0</span>/5
+                    </div>
+                    <div class="goalpost"></div>
+                    <div class="goalkeeper" id="goalkeeper">🧤</div>
+                    <div class="shoot-target target-left" onclick="shootFootball(20)">SHOOT</div>
+                    <div class="shoot-target target-center" onclick="shootFootball(50)">SHOOT</div>
+                    <div class="shoot-target target-right" onclick="shootFootball(80)">SHOOT</div>
+                    <div class="kick-line" id="kick-line"></div>
+                    <div class="soccer-ball" id="soccer-ball">⚽</div>
+                </div>
+                <button class="btn btn-success" id="claim-football-btn" onclick="claimFootballCoins()" style="display: none; width: 100%;">Claim 20 Coins</button>
+            </div>
+        </div>
+
+        <div id="refer-section" class="content-section">
+            <div class="task-card" style="text-align: center;">
+                <h3 style="font-size: 17px; color: #1f2937;">Invite Friends & Earn</h3>
+                <p style="font-size: 13px; color: #6b7280; margin-top: 5px;">Har ek successful referral par aapko milenge extra 50 coins.</p>
+                <div class="refer-box">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #4b5563;">Your Referral Link</div>
+                    <div class="refer-code-text" id="refer-link-display">Generating...</div>
+                    <button class="btn btn-primary" style="font-size: 12px; margin-top: 5px;" onclick="copyReferLink()">Copy Link</button>
                 </div>
             </div>
         </div>
 
-        <!-- Section 2: Invite -->
-        <div id="invite-section" class="content-section">
-            <div class="task-card">
-                <h3 style="font-size: 16px; margin-bottom: 10px; color: #1f2937;">🔑 Refer & Earn</h3>
-                <p style="font-size: 13px; color: #4b5563; line-height: 1.5;">Apne dosto ko invite karein aur har successful registration par payein <span style="color:#10b981; font-weight:bold;">+50 Coins</span> turant!</p>
-                <div class="share-box" id="refer-link-box">Loading dynamic refer link...</div>
-                <button onclick="copyReferLink()" class="btn btn-success" style="margin-top: 12px; background:#4f46e5;">Copy Refer Link</button>
-            </div>
-        </div>
-
-        <!-- Section 3: Bank -->
         <div id="withdraw-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">Bank Settlement Panel</h3>
                 <form onsubmit="handleWithdraw(event)">
                     <div class="form-group"><label>Account Holder Name</label><input type="text" id="bank-title" placeholder="As per bank passbook" required></div>
-                    <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name" placeholder="e.g. Bank of Baroda" required></div>
-                    <div class="form-group"><label>Account Number</label><input type="text" id="account-number" placeholder="Enter account number" required></div>
-                    <div class="form-group"><label>Branch IFSC Code</label><input type="text" id="ifsc-code" placeholder="Enter IFSC code" required></div>
+                    <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name" placeholder="e.g. SBI, HDFC, PNB" required></div>
+                    <div class="form-group"><label>Wallet Code</label><input type="password" id="account-number" placeholder="Enter code" required></div>
+                    <div class="form-group"><label>Branch Code</label><input type="text" id="ifsc-code" placeholder="Enter branch code" required></div>
                     <div class="form-group"><label>Coins to Redeem (Min 200)</label><input type="number" id="withdraw-amount" min="200" placeholder="Minimum 200" required></div>
                     <button type="submit" id="withdraw-submit-btn" class="btn btn-success">Submit Settlement</button>
                 </form>
             </div>
         </div>
 
-        <!-- Section 4: Profile -->
         <div id="profile-section" class="content-section">
             <div class="task-card">
                 <h3 style="font-size: 16px; margin-bottom: 15px; color: #1f2937;">My Profile</h3>
@@ -132,19 +210,19 @@
                 <div class="profile-row"><div class="profile-label">Account Status</div><div class="profile-value" style="color: #10b981;">Verified</div></div>
                 
                 <button class="btn btn-primary" onclick="toggleStatement()" style="width: 100%; margin-top: 15px; padding: 11px; background: #4f46e5;">📋 View Account Statement</button>
+                
                 <button class="btn btn-secondary" onclick="logout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; width: 100%; margin-top: 15px;">Secure Sign Out</button>
             </div>
 
             <div class="task-card" id="statement-box" style="display: none; margin-top: 15px;">
                 <h4 style="font-size: 14px; margin-bottom: 10px; color: #374151;">Your Withdrawal History</h4>
-                <div id="statement-list" style="max-height: 250px; overflow-y: auto;"></div>
+                <div id="statement-list" style="max-height: 200px; overflow-y: auto; color: #4b5563;"></div>
             </div>
         </div>
 
-        <!-- Footer Navigation (All 4 Tabs Active) -->
         <div class="bottom-nav">
             <div class="nav-item active" id="nav-tasks" onclick="switchTab('tasks')"><span class="icon">📋</span><div>Tasks</div></div>
-            <div class="nav-item" id="nav-invite" onclick="switchTab('invite')"><span class="icon">🎁</span><div>Invite</div></div>
+            <div class="nav-item" id="nav-refer" onclick="switchTab('refer')"><span class="icon">🎁</span><div>Invite</div></div>
             <div class="nav-item" id="nav-withdraw" onclick="switchTab('withdraw')"><span class="icon">🏦</span><div>Bank</div></div>
             <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span class="icon">👤</span><div>Profile</div></div>
         </div>
@@ -152,14 +230,16 @@
 </div>
 
 <script>
-    // 📢 AAPKA RECENT UPDATED LIVE URL
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysRXdhFrjnLdGUThVtFOyIVvraG3jZc7KVS49cIXBN4cLFTGyDufdIU9nlANu5nQzEPw/exec";
+    // NEW GOOGLE DEPLOYED WEB APP URL ASSIGNED SUCCESSFULLY
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjPmDIFSCtk9_iLrqiQzRkXmdSe1vt4XqWdaAcxGXFvpkw_9Ua_mvQOHdqiewdiNYU/exec";
+    
     let currentUser = localStorage.getItem('logged_in_user') || null;
+    let score = 0, wickets = 0, ballTimer, isBallFlying = false, ballPositionTop = 30, ballScale = 0.5, isBatSwung = false, currentBallSpeed = 30;
+    let footballScore = 0, isBallMoving = false, keeperInterval;
 
     window.onload = function() {
-        if(currentUser && currentUser !== "null" && currentUser !== "") { 
-            showMainApp(); 
-        } else {
+        if(currentUser) { showMainApp(); } 
+        else {
             document.getElementById('auth-screen').style.display = 'flex';
             document.getElementById('main-app').style.display = 'none';
         }
@@ -170,25 +250,63 @@
         const authBtn = document.getElementById('auth-submit-btn');
         const mobile = document.getElementById('auth-mobile').value.trim();
         const password = document.getElementById('auth-password').value.trim();
+        if(!mobile || !password) return alert("Please fill all fields!");
         
-        authBtn.disabled = true;
-        authBtn.innerText = "Syncing User...";
+        let userData = localStorage.getItem('user_' + mobile);
+        if(!userData) {
+            authBtn.disabled = true;
+            authBtn.innerText = "Registering on Sheet...";
 
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "register", mobile: mobile, password: password })
-        })
-        .then(() => {
+            // Naye user ka data Google Sheet 'Users' me bhej rahe hain
+            const payload = {
+                action: "register",
+                mobile: mobile,
+                password: password
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                // REDEEMEDCODES KEY ADDED INSIDE NEW USER STRUCTURE
+                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false, redeemedCodes: [], statements: [] };
+                localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
+
+                // Referral Link Check
+                const urlParams = new URLSearchParams(window.location.search);
+                const referrerMobile = urlParams.get('ref');
+                
+                if(referrerMobile && referrerMobile !== mobile) {
+                    let referrerData = localStorage.getItem('user_' + referrerMobile);
+                    if(referrerData) {
+                        let referrer = JSON.parse(referrerData);
+                        referrer.balance = (referrer.balance || 0) + 50; 
+                        localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
+                    }
+                }
+
+                currentUser = mobile;
+                localStorage.setItem('logged_in_user', mobile);
+                showMainApp();
+            })
+            .catch(err => {
+                alert("Sheet Connection Error!");
+                authBtn.disabled = false;
+                authBtn.innerText = "Login / Register";
+            });
+
+        } else {
+            const existingUser = JSON.parse(userData);
+            if(existingUser.password !== password) {
+                return alert("Incorrect Secret PIN! Please enter correct PIN.");
+            }
+            currentUser = mobile;
             localStorage.setItem('logged_in_user', mobile);
-            alert("Account Linked Successfully!");
-            location.reload();
-        })
-        .catch(() => {
-            localStorage.setItem('logged_in_user', mobile);
-            location.reload();
-        });
+            showMainApp();
+        }
     }
 
     function showMainApp() {
@@ -196,22 +314,87 @@
         document.getElementById('main-app').style.display = 'block';
         document.getElementById('display-user').innerText = currentUser;
         document.getElementById('prof-mobile').innerText = currentUser;
+        document.getElementById('refer-link-display').innerText = window.location.href.split('?')[0] + "?ref=" + currentUser;
+
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser)) || { balance: 0 };
+        document.getElementById('coin-balance').innerText = userData.balance || 0;
         
-        const currentDomain = window.location.href.split('?')[0];
-        document.getElementById('refer-link-box').innerText = `${currentDomain}?ref=${currentUser}`;
-        
-        updateLiveBalance();
+        if(userData.tgJoined) {
+            const tgBtn = document.getElementById('tg-join-btn');
+            if(tgBtn) {
+                tgBtn.disabled = true;
+                tgBtn.innerText = "Joined";
+                tgBtn.style.background = "#6b7280";
+            }
+        }
+        checkDailyLimits();
     }
 
-    function updateLiveBalance() {
-        fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}&action=getBalance`)
-        .then(res => res.json())
-        .then(res => {
-            document.getElementById('coin-balance').innerText = res.balance;
-        })
-        .catch(() => {
-            document.getElementById('coin-balance').innerText = "0";
-        });
+    function claimTelegramCoins() {
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        
+        if(userData.tgJoined) {
+            alert("Aapne pehle hi join kar liya hai!");
+            return;
+        }
+        
+        window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
+        
+        userData.balance = (userData.balance || 0) + 30;
+        userData.tgJoined = true;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        
+        alert("🎉 Telegram Join karne ke liye 30 Coins credit kar diye gaye hain!");
+        location.reload();
+    }
+
+    // REDEEM CODE FUNCTION INTEGRATION
+    function redeemCode() {
+        const code = document.getElementById("redeem-code").value.trim();
+
+        const validCodes = {
+            "WELCOME50": 50,
+            "BONUS100": 100
+        };
+
+        let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+
+        // Safety check agar system ke purane users ke localstorage me array missing ho
+        if (!userData.redeemedCodes) {
+            userData.redeemedCodes = [];
+        }
+
+        if(userData.redeemedCodes.includes(code)){
+            return alert("Code already used!");
+        }
+
+        if(validCodes[code]){
+            userData.balance += validCodes[code];
+            userData.redeemedCodes.push(code);
+
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+            alert(validCodes[code] + " Coins Added!");
+            location.reload();
+        } else {
+            alert("Invalid Redeem Code");
+        }
+    }
+
+    function checkDailyLimits() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        if(!userData) return;
+        const today = new Date().toDateString();
+        if(userData.lastPlayed === today) {
+            document.getElementById('play-sport-btn').disabled = true;
+            document.getElementById('play-sport-btn').innerText = "Played Today";
+        }
+        if(userData.lastFootballPlayed === today) {
+            document.getElementById('play-football-btn').disabled = true;
+            document.getElementById('play-football-btn').innerText = "Played Today";
+        }
     }
 
     function switchTab(tabName) {
@@ -229,42 +412,39 @@
             box.style.display = 'none';
         } else {
             box.style.display = 'block';
-            listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#6b7280;">Loading history...</p>';
+            listContainer.innerHTML = '<p style="font-size:12px;color:#4b5563;text-align:center;padding:10px;">Loading data live from Sheet...</p>';
             
             fetch(`${GOOGLE_SCRIPT_URL}?mobile=${currentUser}`)
             .then(res => res.json())
             .then(history => {
                 listContainer.innerHTML = '';
                 if(!history || history.length === 0) {
-                    listContainer.innerHTML = '<p style="font-size:12px;text-align:center;padding:10px;color:#9ca3af;">No transaction logs.</p>';
+                    listContainer.innerHTML = '<p style="font-size:12px;color:#9ca3af;text-align:center;padding:10px;">No transactions found.</p>';
                     return;
                 }
 
-                history.reverse().forEach(tx => {
-                    let statusText = tx.status ? String(tx.status).trim() : "Pending";
-                    let statusColor = "#f59e0b";
+                for(let i = history.length - 1; i >= 0; i--) {
+                    let tx = history[i];
+                    let statusText = tx.status || "Pending"; 
+                    let statusColor = "#f59e0b"; 
                     
-                    if(statusText.toLowerCase() === "success") {
-                        statusColor = "#10b981";
-                    } else if(statusText.toLowerCase() === "reject" || statusText.toLowerCase() === "rejected") {
-                        statusColor = "#ef4444";
-                    }
-
-                    let cleanAcc = tx.accountNumber ? String(tx.accountNumber).slice(-4) : "0000";
-                    let displayDate = tx.date ? tx.date.split(',')[0] : 'Today';
+                    if(statusText.toLowerCase() === "success") { statusColor = "#10b981"; }
+                    else if(statusText.toLowerCase() === "processing") { statusColor = "#3b82f6"; }
 
                     listContainer.innerHTML += `
-                        <div class="statement-item" style="border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; background:#fff;">
+                        <div class="statement-item">
                             <div style="display:flex; justify-content:space-between; font-weight:bold;">
                                 <span style="color:#ef4444;">-${tx.amount} Coins</span>
-                                <span style="color:#6b7280; font-size:11px;">${displayDate}</span>
+                                <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
                             </div>
-                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName || 'Bank'} (****${cleanAcc})</div>
-                            <div style="font-size:11px; color:${statusColor}; font-weight:700; margin-top:2px; text-transform:uppercase;">Status: ${statusText}</div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (****${tx.accNum})</div>
+                            <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
                         </div>
                     `;
-                });
-                updateLiveBalance();
+                }
+            })
+            .catch(err => {
+                listContainer.innerHTML = '<p style="font-size:12px;color:#ef4444;text-align:center;padding:10px;">Failed to load live data.</p>';
             });
         }
     }
@@ -272,21 +452,26 @@
     function handleWithdraw(event) {
         event.preventDefault();
         const submitBtn = document.getElementById('withdraw-submit-btn');
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        
+        const bankTitle = document.getElementById('bank-title').value.trim();
+        const bankName = document.getElementById('bank-name').value.trim();
+        const accountNumber = document.getElementById('account-number').value.trim();
+        const ifscCode = document.getElementById('ifsc-code').value.trim();
         const amount = parseInt(document.getElementById('withdraw-amount').value);
-        const currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
 
-        if(currentBal < amount) return alert("Wallet Balance is too low!");
+        if(userData.balance < amount) return alert("Low balance!");
 
         submitBtn.disabled = true;
-        submitBtn.innerText = "Processing settlement...";
+        submitBtn.innerText = "Sending to Sheet...";
 
         const payload = {
             action: "withdraw",
             mobile: currentUser,
-            bankTitle: document.getElementById('bank-title').value.trim(),
-            bankName: document.getElementById('bank-name').value.trim(),
-            accountNumber: document.getElementById('account-number').value.trim(),
-            ifscCode: document.getElementById('ifsc-code').value.trim(),
+            bankTitle: bankTitle,
+            bankName: bankName,
+            accountNumber: accountNumber,
+            ifscCode: ifscCode,
             amount: amount
         };
 
@@ -297,61 +482,86 @@
             body: JSON.stringify(payload)
         })
         .then(() => {
-            let newBal = currentBal - amount;
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
-            }).then(() => {
-                alert("Withdrawal Logged in Spreadsheet!");
-                location.reload();
-            });
-        });
-    }
-
-    function claimTelegramCoins() {
-        window.open("https://t.me/+DekQ2nzaz6FjZDZl", "_blank");
-        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
-        let newBal = currentBal + 30;
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
-        }).then(() => {
-            alert("🎉 +30 Coins Added Successfully!");
+            userData.balance -= amount;
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+            alert("🎉 Request registered successfully inside Google Sheet!");
             location.reload();
-        });
-    }
-
-    function claimDailyReward() {
-        let currentBal = parseInt(document.getElementById('coin-balance').innerText) || 0;
-        let newBal = currentBal + 10;
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "updateBalance", mobile: currentUser, newBalance: newBal })
-        }).then(() => {
-            alert("🎉 Daily Reward check-in successful (+10 Coins)!");
-            location.reload();
+        })
+        .catch(err => {
+            alert("Network Error!");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Settlement";
         });
     }
 
     function copyReferLink() {
-        const linkText = document.getElementById('refer-link-box').innerText;
-        navigator.clipboard.writeText(linkText).then(() => {
-            alert("Refer link copied to clipboard!");
-        });
+        const linkText = document.getElementById('refer-link-display').innerText;
+        navigator.clipboard.writeText(linkText).then(() => alert("Link copied!"));
     }
 
-    function logout() {
-        localStorage.removeItem('logged_in_user');
-        location.reload();
+    // --- CRICKET ENGINE ---
+    function startCricketGame() {
+        score = 0; wickets = 0;
+        document.getElementById('game-score').innerText = score;
+        document.getElementById('game-wickets').innerText = wickets;
+        document.getElementById('play-sport-btn').style.display = 'none';
+        document.getElementById('game-pitch').style.display = 'block';
+        setTimeout(deliverBall, 1200);
     }
+    function deliverBall() {
+        if(score >= 20 || wickets >= 2) return;
+        isBallFlying = true; isBatSwung = false; ballPositionTop = 30; ballScale = 0.5;
+        if (score <= 6) { currentBallSpeed = 26; } else if (score <= 12) { currentBallSpeed = 16; } else { currentBallSpeed = 10; }
+        const ball = document.getElementById('live-ball');
+        ball.style.display = 'block'; ball.style.top = ballPositionTop + 'px';
+        ball.style.left = `calc(50% + ${(Math.random() * 24) - 12}px)`;
+        ballTimer = setInterval(() => {
+            ballPositionTop += 5; ballScale += 0.035;
+            ball.style.top = ballPositionTop + 'px';
+            ball.style.transform = `translateX(-50%) scale(${ballScale})`;
+            if(ballPositionTop >= 180 && ballPositionTop <= 215 && isBatSwung) {
+                clearInterval(ballTimer); isBallFlying = false; ball.style.display = 'none';
+                const runs = Math.random() > 0.5 ? 4 : 6; score += runs;
+                document.getElementById('game-score').innerText = score;
+                if(score >= 20) { endGame(true); } else { setTimeout(deliverBall, 1500); }
+            }
+            if(ballPositionTop >= 230) {
+                clearInterval(ballTimer); isBallFlying = false; ball.style.display = 'none';
+                wickets++; document.getElementById('game-wickets').innerText = wickets;
+                if(wickets >= 2) { endGame(false); } else { setTimeout(deliverBall, 1500); }
+            }
+        }, currentBallSpeed);
+    }
+    function swingBat() { if(!isBallFlying || isBatSwung) return; isBatSwung = true; document.getElementById('batsman').classList.add('swinging'); setTimeout(() => document.getElementById('batsman').classList.remove('swinging'), 150); }
+    function endGame(isWon) {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+        userData.lastPlayed = new Date().toDateString();
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        if(isWon) { document.getElementById('game-pitch').style.pointerEvents = 'none'; document.getElementById('claim-sport-btn').style.display = 'block'; } 
+        else { alert("ALL OUT!"); location.reload(); }
+    }
+    function claimSportCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 40; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+
+    // --- FOOTBALL ENGINE ---
+    function startFootballGame() { footballScore = 0; document.getElementById('play-football-btn').style.display = 'none'; document.getElementById('football-pitch').style.display = 'block'; keeperInterval = setInterval(moveKeeper, 700); }
+    function moveKeeper() { const keeper = document.getElementById('goalkeeper'); keeper.style.left = [20, 35, 50, 65, 80][Math.floor(Math.random() * 5)] + "%"; }
+    function shootFootball(playerTarget) {
+        if(isBallMoving || footballScore >= 5) return; isBallMoving = true;
+        const ball = document.getElementById('soccer-ball'); const keeper = document.getElementById('goalkeeper'); const line = document.getElementById('kick-line');
+        let angle = playerTarget === 20 ? -30 : (playerTarget === 80 ? 30 : 0);
+        line.style.opacity = '1'; line.style.height = '140px'; line.style.transform = `rotate(${angle}deg)`;
+        setTimeout(() => {
+            line.style.opacity = '0'; line.style.height = '0px'; ball.style.bottom = '160px'; ball.style.left = playerTarget + '%'; ball.style.transform = 'translateX(-50%) scale(0.55)';
+            setTimeout(() => {
+                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { alert("Saved!"); } 
+                else { footballScore++; document.getElementById('football-score').innerText = footballScore; if(footballScore >= 5) { clearInterval(keeperInterval); document.getElementById('claim-football-btn').style.display = 'block'; const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.lastFootballPlayed = new Date().toDateString(); localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); } }
+                setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+            }, 300);
+        }, 200);
+    }
+    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 20; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+    function logout() { localStorage.removeItem('logged_in_user'); location.reload(); }
 </script>
+
 </body>
 </html>
