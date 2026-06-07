@@ -20,6 +20,7 @@
         .content-section.active { display: block; }
         
         .task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .task-info h3 { font-size: 15px; font-weight: 600; color: #1f2937; }
         .task-info p { font-size: 13px; color: #10b981; font-weight: 600; margin-top: 2px; }
@@ -68,6 +69,21 @@
         .target-right { right: 15%; }
         .kick-line { position: absolute; bottom: 31px; left: 50%; width: 2px; height: 0px; background: linear-gradient(to top, rgba(255,255,255,0.8), rgba(255,255,255,0)); transform-origin: bottom center; transition: all 0.3s ease; opacity: 0; z-index: 8; }
         
+        /* MIND GAMES STYLING */
+        .matrix-grid { display: grid; grid-template-columns: repeat(3, 75px); gap: 15px; margin: 15px auto; width: max-content; display: none; }
+        .matrix-box { width: 70px; height: 70px; background: #374151; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .matrix-box.active-blink { background: #3b82f6; }
+        .matrix-box.success-blink { background: #10b981; }
+        .matrix-box.fail-blink { background: #ef4444; }
+
+        .math-container { display: none; text-align: center; margin-top: 15px; background: #1f2937; color: white; padding: 15px; border-radius: 12px; }
+        .math-question { font-size: 24px; font-weight: 700; margin-bottom: 10px; color: #facc15; }
+        .math-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+        .math-btn { background: #4b5563; border: none; color: white; padding: 10px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .math-btn:active { background: #374151; }
+        .math-timer-bar { width: 100%; height: 5px; background: #e5e7eb; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .math-timer-fill { height: 100%; width: 100%; background: #ef4444; transition: width 0.1s linear; }
+
         .refer-box { background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 12px; padding: 15px; text-align: center; margin-top: 15px; }
         .refer-code-text { font-size: 16px; font-weight: 700; color: #2563eb; word-break: break-all; margin: 10px 0; }
         
@@ -130,11 +146,11 @@
                 <div class="task-header">
                     <div class="task-info">
                         <h3>Daily Live Cricket Match</h3>
-                        <p style="color: #4f46e5;">+40 Coins (Target: 20 Runs)</p>
+                        <p style="color: #4f46e5;" id="cricket-reward-text">+5 to 10 Coins (Target: 20 Runs)</p>
                     </div>
                     <button class="btn btn-primary" id="play-sport-btn" onclick="startCricketGame()">Play Match</button>
                 </div>
-                <p id="sport-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Pehle Slow ball aayegi, runs badhne par Fast hoti jayegi. 2 Wickets hain!</p>
+                <p id="sport-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Pehle Slow ball aayegi, runs badhne par Fast hoti jayegi. 2 Wickets hain! (Daily 2 Chances)</p>
                 
                 <div class="game-pitch" id="game-pitch" onclick="swingBat()">
                     <div style="position: absolute; top: 8px; left: 12px; color: white; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; z-index: 30; display: flex; gap: 15px;">
@@ -148,18 +164,18 @@
                     <div class="batsman-container" id="batsman"><div class="batsman-body"><div class="batsman-head"></div><div class="batsman-bat" id="bat"></div></div></div>
                     <div class="live-ball" id="live-ball"></div>
                 </div>
-                <button class="btn btn-success" id="claim-sport-btn" onclick="claimSportCoins()" style="display: none; width: 100%;">Claim 40 Coins</button>
+                <button class="btn btn-success" id="claim-sport-btn" onclick="claimSportCoins()" style="display: none; width: 100%;">Claim Coins</button>
             </div>
 
             <div class="task-card" id="football-task-card">
                 <div class="task-header">
                     <div class="task-info">
                         <h3>Football Penalty Kick</h3>
-                        <p style="color: #10b981;">+20 Coins (Target: 5 Goals)</p>
+                        <p style="color: #10b981;" id="football-reward-text">+5 to 10 Coins (Target: 5 Goals)</p>
                     </div>
                     <button class="btn btn-primary" id="play-football-btn" onclick="startFootballGame()">Play Football</button>
                 </div>
-                <p id="football-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Khali Target Box par click karein. Ball real line ke raste wahi shoot hogi!</p>
+                <p id="football-status-text" style="font-size: 12px; color: #4b5563; font-weight: 500;">Khali Target Box par click karein. Ball real line ke raste wahi shoot hogi! (Daily 2 Chances)</p>
                 
                 <div class="football-pitch" id="football-pitch">
                     <div style="position: absolute; top: 15px; left: 15px; color: white; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; z-index: 30;">
@@ -173,8 +189,52 @@
                     <div class="kick-line" id="kick-line"></div>
                     <div class="soccer-ball" id="soccer-ball">⚽</div>
                 </div>
-                <button class="btn btn-success" id="claim-football-btn" onclick="claimFootballCoins()" style="display: none; width: 100%;">Claim 20 Coins</button>
+                <button class="btn btn-success" id="claim-football-btn" onclick="claimFootballCoins()" style="display: none; width: 100%;">Claim Coins</button>
             </div>
+
+            <!-- GAME 3: MEMORY MATRIX -->
+            <div class="task-card" id="matrix-task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Memory Matrix Mind Game</h3>
+                        <p style="color: #3b82f6;">+5 to 10 Coins (Target: Remember Path)</p>
+                    </div>
+                    <button class="btn btn-primary" id="play-matrix-btn" onclick="startMatrixGame()">Play Memory</button>
+                </div>
+                <p style="font-size: 12px; color: #4b5563; font-weight: 500;">Blink hone waale boxes ko dhyan se dekhein aur usi order me click karein. (Daily 2 Chances)</p>
+                <div class="matrix-grid" id="matrix-grid">
+                    <div class="matrix-box" data-idx="0" onclick="handleMatrixClick(0)"></div>
+                    <div class="matrix-box" data-idx="1" onclick="handleMatrixClick(1)"></div>
+                    <div class="matrix-box" data-idx="2" onclick="handleMatrixClick(2)"></div>
+                    <div class="matrix-box" data-idx="3" onclick="handleMatrixClick(3)"></div>
+                    <div class="matrix-box" data-idx="4" onclick="handleMatrixClick(4)"></div>
+                    <div class="matrix-box" data-idx="5" onclick="handleMatrixClick(5)"></div>
+                    <div class="matrix-box" data-idx="6" onclick="handleMatrixClick(6)"></div>
+                    <div class="matrix-box" data-idx="7" onclick="handleMatrixClick(7)"></div>
+                    <div class="matrix-box" data-idx="8" onclick="handleMatrixClick(8)"></div>
+                </div>
+                <button class="btn btn-success" id="claim-matrix-btn" onclick="claimMatrixCoins()" style="display: none; width: 100%;">Claim Coins</button>
+            </div>
+
+            <!-- GAME 4: MATH RUSH -->
+            <div class="task-card" id="math-task-card">
+                <div class="task-header">
+                    <div class="task-info">
+                        <h3>Math Rush Challenge</h3>
+                        <p style="color: #facc15;">+5 to 10 Coins (Target: 5 Right Answers)</p>
+                    </div>
+                    <button class="btn btn-primary" id="play-math-btn" onclick="startMathGame()">Start Math Challenge</button>
+                </div>
+                <p style="font-size: 12px; color: #4b5563; font-weight: 500;">4 Seconds ke andar correct solve karein. Fast decision mind game! (Daily 2 Chances)</p>
+                <div class="math-container" id="math-container">
+                    <div style="font-size: 12px; text-align: left; margin-bottom: 5px; color: #9ca3af;">Score: <span id="math-score">0</span>/5</div>
+                    <div class="math-question" id="math-question">0 + 0</div>
+                    <div class="math-options" id="math-options"></div>
+                    <div class="math-timer-bar"><div class="math-timer-fill" id="math-timer-fill"></div></div>
+                </div>
+                <button class="btn btn-success" id="claim-math-btn" onclick="claimMathCoins()" style="display: none; width: 100%;">Claim Coins</button>
+            </div>
+
         </div>
 
         <div id="refer-section" class="content-section">
@@ -230,12 +290,16 @@
 </div>
 
 <script>
-    // NEW GOOGLE DEPLOYED WEB APP URL ASSIGNED SUCCESSFULLY
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjPmDIFSCtk9_iLrqiQzRkXmdSe1vt4XqWdaAcxGXFvpkw_9Ua_mvQOHdqiewdiNYU/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLrWvFk1UsKcEMQwIIfQkZvkP2Xqkdks73rlJngAXvSzYVjsEagZ68BoJxLkUoExeF-g/exec";
     
     let currentUser = localStorage.getItem('logged_in_user') || null;
     let score = 0, wickets = 0, ballTimer, isBallFlying = false, ballPositionTop = 30, ballScale = 0.5, isBatSwung = false, currentBallSpeed = 30;
     let footballScore = 0, isBallMoving = false, keeperInterval;
+    let generatedReward = 0; 
+
+    // Mind Games Variables
+    let matrixSequence = [], userSequence = [], matrixReward = 0;
+    let mathScore = 0, correctAns = 0, mathInterval, mathReward = 0, mathTimeLeft = 100;
 
     window.onload = function() {
         if(currentUser) { showMainApp(); } 
@@ -245,6 +309,7 @@
         }
     };
 
+    // POORI TARAH SE UPDATED AUR FIXED AUTHENTICATION SYSTEM
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -253,17 +318,29 @@
         if(!mobile || !password) return alert("Please fill all fields!");
         
         let userData = localStorage.getItem('user_' + mobile);
-        if(!userData) {
+        let parsedUser = null;
+
+        // Valid JSON check karein aur ensure karein ki usme stringified content proper ho
+        try {
+            if (userData && userData.startsWith('{')) {
+                parsedUser = JSON.parse(userData);
+            }
+        } catch(e) {
+            parsedUser = null;
+        }
+
+        // AGAR DATA CORRUPTED HAI YA USME PASSWORD VALUE MISSING HAI, TOH USE NAYA MAAN KAR OVERWRITE KAREIN
+        if(!parsedUser || !parsedUser.password) {
             authBtn.disabled = true;
             authBtn.innerText = "Registering on Sheet...";
 
-            // Naye user ka data Google Sheet 'Users' me bhej rahe hain
             const payload = {
                 action: "register",
                 mobile: mobile,
                 password: password
             };
 
+            // Sheet me data send hone ka structure robust banaya gaya h
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -271,21 +348,33 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                // REDEEMEDCODES KEY ADDED INSIDE NEW USER STRUCTURE
-                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, tgJoined: false, redeemedCodes: [], statements: [] };
-                localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
+                const freshUser = { 
+                    mobile: mobile, 
+                    password: password, 
+                    balance: 0, 
+                    lastPlayed: null, 
+                    lastFootballPlayed: null, 
+                    cricketChances: 0, 
+                    footballChances: 0, 
+                    tgJoined: false, 
+                    redeemedCodes: [], 
+                    statements: [] 
+                };
+                localStorage.setItem('user_' + mobile, JSON.stringify(freshUser));
 
-                // Referral Link Check
+                // Referral Code validation logic
                 const urlParams = new URLSearchParams(window.location.search);
                 const referrerMobile = urlParams.get('ref');
                 
                 if(referrerMobile && referrerMobile !== mobile) {
                     let referrerData = localStorage.getItem('user_' + referrerMobile);
-                    if(referrerData) {
-                        let referrer = JSON.parse(referrerData);
-                        referrer.balance = (referrer.balance || 0) + 50; 
-                        localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
-                    }
+                    try {
+                        if(referrerData) {
+                            let referrer = JSON.parse(referrerData);
+                            referrer.balance = (referrer.balance || 0) + 50; 
+                            localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
+                        }
+                    } catch(err) {}
                 }
 
                 currentUser = mobile;
@@ -293,14 +382,21 @@
                 showMainApp();
             })
             .catch(err => {
-                alert("Sheet Connection Error!");
+                // Agar script load na ho toh offline system directly initiate ho jaye securely
+                const offlineUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, cricketChances: 0, footballChances: 0, tgJoined: false, redeemedCodes: [], statements: [] };
+                localStorage.setItem('user_' + mobile, JSON.stringify(offlineUser));
+                currentUser = mobile;
+                localStorage.setItem('logged_in_user', mobile);
+                showMainApp();
+            })
+            .finally(() => {
                 authBtn.disabled = false;
                 authBtn.innerText = "Login / Register";
             });
 
         } else {
-            const existingUser = JSON.parse(userData);
-            if(existingUser.password !== password) {
+            // Agar pehle se account bana hua hai aur PIN galat hai toh hi alert dega
+            if(parsedUser.password !== password) {
                 return alert("Incorrect Secret PIN! Please enter correct PIN.");
             }
             currentUser = mobile;
@@ -349,10 +445,9 @@
         location.reload();
     }
 
-    // REDEEM CODE FUNCTION INTEGRATION
+    //[cite: 1]
     function redeemCode() {
         const code = document.getElementById("redeem-code").value.trim();
-
         const validCodes = {
             "WELCOME50": 50,
             "BONUS100": 100
@@ -361,7 +456,6 @@
         let userData = JSON.parse(localStorage.getItem('user_' + currentUser));
         if(!userData) return;
 
-        // Safety check agar system ke purane users ke localstorage me array missing ho
         if (!userData.redeemedCodes) {
             userData.redeemedCodes = [];
         }
@@ -373,9 +467,7 @@
         if(validCodes[code]){
             userData.balance += validCodes[code];
             userData.redeemedCodes.push(code);
-
             localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
-
             alert(validCodes[code] + " Coins Added!");
             location.reload();
         } else {
@@ -387,13 +479,30 @@
         const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
         if(!userData) return;
         const today = new Date().toDateString();
-        if(userData.lastPlayed === today) {
+        
+        // Date reset system for chances
+        if(userData.lastPlayed !== today) { userData.cricketChances = 0; }
+        if(userData.lastFootballPlayed !== today) { userData.footballChances = 0; }
+        if(userData.lastMatrixPlayed !== today) { userData.matrixChances = 0; }
+        if(userData.lastMathPlayed !== today) { userData.mathChances = 0; }
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+
+        // Sports Game Limits (2 chances per day)
+        if(userData.lastPlayed === today && userData.cricketChances >= 2) {
             document.getElementById('play-sport-btn').disabled = true;
             document.getElementById('play-sport-btn').innerText = "Played Today";
         }
-        if(userData.lastFootballPlayed === today) {
+        if(userData.lastFootballPlayed === today && userData.footballChances >= 2) {
             document.getElementById('play-football-btn').disabled = true;
             document.getElementById('play-football-btn').innerText = "Played Today";
+        }
+        if(userData.lastMatrixPlayed === today && userData.matrixChances >= 2) {
+            document.getElementById('play-matrix-btn').disabled = true;
+            document.getElementById('play-matrix-btn').innerText = "Played Today";
+        }
+        if(userData.lastMathPlayed === today && userData.mathChances >= 2) {
+            document.getElementById('play-math-btn').disabled = true;
+            document.getElementById('play-math-btn').innerText = "Played Today";
         }
     }
 
@@ -437,7 +546,7 @@
                                 <span style="color:#ef4444;">-${tx.amount} Coins</span>
                                 <span style="color:#6b7280; font-size:11px;">${tx.date}</span>
                             </div>
-                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (****${tx.accNum})</div>
+                            <div style="font-size:11px; color:#4b5563; margin-top:4px;">Bank: ${tx.bankName} (**${tx.accNum})</div>
                             <div style="font-size:11px; color:${statusColor}; font-weight:500;">Status: ${statusText}</div>
                         </div>
                     `;
@@ -535,12 +644,34 @@
     function swingBat() { if(!isBallFlying || isBatSwung) return; isBatSwung = true; document.getElementById('batsman').classList.add('swinging'); setTimeout(() => document.getElementById('batsman').classList.remove('swinging'), 150); }
     function endGame(isWon) {
         const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
-        userData.lastPlayed = new Date().toDateString();
+        const today = new Date().toDateString();
+        
+        if(userData.lastPlayed !== today) {
+            userData.lastPlayed = today;
+            userData.cricketChances = 1;
+        } else {
+            userData.cricketChances = (userData.cricketChances || 0) + 1;
+        }
         localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
-        if(isWon) { document.getElementById('game-pitch').style.pointerEvents = 'none'; document.getElementById('claim-sport-btn').style.display = 'block'; } 
-        else { alert("ALL OUT!"); location.reload(); }
+        
+        if(isWon) { 
+            generatedReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+            document.getElementById('game-pitch').style.pointerEvents = 'none'; 
+            const claimBtn = document.getElementById('claim-sport-btn');
+            claimBtn.innerText = `Claim ${generatedReward} Coins`;
+            claimBtn.style.display = 'block'; 
+        } 
+        else { 
+            alert(`ALL OUT! Chance ${userData.cricketChances}/2 used.`); 
+            location.reload(); 
+        }
     }
-    function claimSportCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 40; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+    function claimSportCoins() { 
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+        userData.balance += generatedReward; 
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+        location.reload(); 
+    }
 
     // --- FOOTBALL ENGINE ---
     function startFootballGame() { footballScore = 0; document.getElementById('play-football-btn').style.display = 'none'; document.getElementById('football-pitch').style.display = 'block'; keeperInterval = setInterval(moveKeeper, 700); }
@@ -553,13 +684,139 @@
         setTimeout(() => {
             line.style.opacity = '0'; line.style.height = '0px'; ball.style.bottom = '160px'; ball.style.left = playerTarget + '%'; ball.style.transform = 'translateX(-50%) scale(0.55)';
             setTimeout(() => {
-                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { alert("Saved!"); } 
-                else { footballScore++; document.getElementById('football-score').innerText = footballScore; if(footballScore >= 5) { clearInterval(keeperInterval); document.getElementById('claim-football-btn').style.display = 'block'; const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.lastFootballPlayed = new Date().toDateString(); localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); } }
-                setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                if(Math.abs(parseFloat(keeper.style.left) - playerTarget) < 16) { 
+                    alert("Saved!"); 
+                    setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                } 
+                else { 
+                    footballScore++; 
+                    document.getElementById('football-score').innerText = footballScore; 
+                    if(footballScore >= 5) { 
+                        clearInterval(keeperInterval); 
+                        generatedReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+                        const claimFbBtn = document.getElementById('claim-football-btn');
+                        claimFbBtn.innerText = `Claim ${generatedReward} Coins`;
+                        claimFbBtn.style.display = 'block'; 
+                        
+                        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); 
+                        const today = new Date().toDateString();
+                        if(userData.lastFootballPlayed !== today) {
+                            userData.lastFootballPlayed = today;
+                            userData.footballChances = 1;
+                        } else {
+                            userData.footballChances = (userData.footballChances || 0) + 1;
+                        }
+                        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); 
+                    } 
+                    setTimeout(() => { ball.style.bottom = '20px'; ball.style.left = '50%'; ball.style.transform = 'translateX(-50%) scale(1)'; isBallMoving = false; }, 600);
+                }
             }, 300);
         }, 200);
     }
-    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += 20; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+    function claimFootballCoins() { const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += generatedReward; localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload(); }
+
+    // --- GAME 3: MEMORY MATRIX ENGINE ---
+    function startMatrixGame() {
+        matrixSequence = []; userSequence = [];
+        document.getElementById('play-matrix-btn').style.display = 'none';
+        document.getElementById('matrix-grid').style.display = 'grid';
+        
+        while(matrixSequence.length < 4) {
+            let r = Math.floor(Math.random() * 9);
+            if(!matrixSequence.includes(r)) matrixSequence.push(r);
+        }
+        playMatrixSequence();
+    }
+    function playMatrixSequence() {
+        let boxes = document.querySelectorAll('.matrix-box');
+        matrixSequence.forEach((boxIdx, i) => {
+            setTimeout(() => {
+                boxes[boxIdx].classList.add('active-blink');
+                setTimeout(() => boxes[boxIdx].classList.remove('active-blink'), 500);
+            }, (i + 1) * 800);
+        });
+    }
+    function handleMatrixClick(idx) {
+        if(matrixSequence.length === 0 || userSequence.length >= matrixSequence.length) return;
+        userSequence.push(idx);
+        let boxes = document.querySelectorAll('.matrix-box');
+        let currentStep = userSequence.length - 1;
+
+        if(userSequence[currentStep] !== matrixSequence[currentStep]) {
+            boxes[idx].classList.add('fail-blink');
+            setTimeout(() => { boxes[idx].classList.remove('fail-blink'); alert("Wrong Order! Dhyan se dekhkar firse try karein."); userSequence = []; }, 300);
+            return;
+        }
+        boxes[idx].classList.add('success-blink');
+        setTimeout(() => boxes[idx].classList.remove('success-blink'), 200);
+
+        if(userSequence.length === matrixSequence.length) {
+            matrixReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+            document.getElementById('matrix-grid').style.pointerEvents = 'none';
+            const mClaim = document.getElementById('claim-matrix-btn');
+            mClaim.innerText = `Claim ${matrixReward} Coins`; mClaim.style.display = 'block';
+
+            const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); const today = new Date().toDateString();
+            if(userData.lastMatrixPlayed !== today) { userData.lastMatrixPlayed = today; userData.matrixChances = 1; } 
+            else { userData.matrixChances = (userData.matrixChances || 0) + 1; }
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        }
+    }
+    function claimMatrixCoins() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += matrixReward;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload();
+    }
+
+    // --- GAME 4: MATH RUSH ENGINE ---
+    function startMathGame() {
+        mathScore = 0; document.getElementById('math-score').innerText = mathScore;
+        document.getElementById('play-math-btn').style.display = 'none';
+        document.getElementById('math-container').style.display = 'block';
+        nextMathQuestion();
+    }
+    function nextMathQuestion() {
+        if(mathScore >= 5) {
+            clearInterval(mathInterval);
+            mathReward = Math.floor(Math.random() * 6) + 5; // 5 to 10 Coins
+            const mClaimBtn = document.getElementById('claim-math-btn');
+            mClaimBtn.innerText = `Claim ${mathReward} Coins`; mClaimBtn.style.display = 'block';
+            document.getElementById('math-options').innerHTML = '';
+
+            const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); const today = new Date().toDateString();
+            if(userData.lastMathPlayed !== today) { userData.lastMathPlayed = today; userData.mathChances = 1; } 
+            else { userData.mathChances = (userData.mathChances || 0) + 1; }
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+            return;
+        }
+        clearInterval(mathInterval);
+        let n1 = Math.floor(Math.random() * 12) + 4; let n2 = Math.floor(Math.random() * 9) + 2;
+        let ops = ['+', '-', '*']; let op = ops[Math.floor(Math.random() * ops.length)];
+        if(op === '*') { n1 = Math.floor(Math.random() * 8) + 2; n2 = Math.floor(Math.random() * 6) + 2; }
+        
+        correctAns = eval(`${n1} ${op} ${n2}`);
+        document.getElementById('math-question').innerText = `${n1} ${op} ${n2} = ?`;
+
+        let opts = [correctAns, correctAns + Math.floor(Math.random() * 4) + 1, correctAns - Math.floor(Math.random() * 3) - 1];
+        opts.sort(() => Math.random() - 0.5);
+
+        let optDiv = document.getElementById('math-options'); optDiv.innerHTML = '';
+        opts.forEach(o => { optDiv.innerHTML += `<button class="math-btn" onclick="checkMathAns(${o})">${o}</button>`; });
+
+        mathTimeLeft = 100;
+        mathInterval = setInterval(() => {
+            mathTimeLeft -= 2.5; document.getElementById('math-timer-fill').style.width = mathTimeLeft + '%';
+            if(mathTimeLeft <= 0) { clearInterval(mathInterval); alert("Time Up! Sabhi 5 answers lagatar sahi dene honge."); mathScore = 0; document.getElementById('math-score').innerText = mathScore; nextMathQuestion(); }
+        }, 100);
+    }
+    function checkMathAns(chosen) {
+        if(chosen === correctAns) { mathScore++; document.getElementById('math-score').innerText = mathScore; nextMathQuestion(); } 
+        else { alert("Wrong Answer! Game reset."); mathScore = 0; document.getElementById('math-score').innerText = mathScore; nextMathQuestion(); }
+    }
+    function claimMathCoins() {
+        const userData = JSON.parse(localStorage.getItem('user_' + currentUser)); userData.balance += mathReward;
+        localStorage.setItem('user_' + currentUser, JSON.stringify(userData)); location.reload();
+    }
+
     function logout() { localStorage.removeItem('logged_in_user'); location.reload(); }
 </script>
 
