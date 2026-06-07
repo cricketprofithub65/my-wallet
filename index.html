@@ -309,7 +309,7 @@
         }
     };
 
-    // ORIGINAL EXACT LOGIN REGISTER CORE FUNCTION (RESTORED)
+    // HIGHLY ROBUST AUTHENTICATION FUNCTION TO PREVENT LOCALSTORAGE CONFLICTS
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -318,11 +318,22 @@
         if(!mobile || !password) return alert("Please fill all fields!");
         
         let userData = localStorage.getItem('user_' + mobile);
-        if(!userData) {
+        let parsedUser = null;
+
+        // Purane corrupted text strings ko catch aur auto-fix karne ke liye check
+        try {
+            if (userData && userData.startsWith('{')) {
+                parsedUser = JSON.parse(userData);
+            }
+        } catch(e) {
+            parsedUser = null;
+        }
+
+        // Agar bilkul naya user hai ya purana data crash/invalid hai, toh fresh register karein
+        if(!parsedUser) {
             authBtn.disabled = true;
             authBtn.innerText = "Registering on Sheet...";
 
-            // Naye user ka data Google Sheet 'Users' me bhej rahe hain
             const payload = {
                 action: "register",
                 mobile: mobile,
@@ -336,20 +347,22 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                const newUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, cricketChances: 0, footballChances: 0, tgJoined: false, redeemedCodes: [], statements: [] };
-                localStorage.setItem('user_' + mobile, JSON.stringify(newUser));
+                const freshUser = { mobile: mobile, password: password, balance: 0, lastPlayed: null, lastFootballPlayed: null, cricketChances: 0, footballChances: 0, tgJoined: false, redeemedCodes: [], statements: [] };
+                localStorage.setItem('user_' + mobile, JSON.stringify(freshUser));
 
-                // Referral Link Check
+                // Referral Code Check
                 const urlParams = new URLSearchParams(window.location.search);
                 const referrerMobile = urlParams.get('ref');
                 
                 if(referrerMobile && referrerMobile !== mobile) {
                     let referrerData = localStorage.getItem('user_' + referrerMobile);
-                    if(referrerData) {
-                        let referrer = JSON.parse(referrerData);
-                        referrer.balance = (referrer.balance || 0) + 50; 
-                        localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
-                    }
+                    try {
+                        if(referrerData) {
+                            let referrer = JSON.parse(referrerData);
+                            referrer.balance = (referrer.balance || 0) + 50; 
+                            localStorage.setItem('user_' + referrerMobile, JSON.stringify(referrer));
+                        }
+                    } catch(err) {}
                 }
 
                 currentUser = mobile;
@@ -363,8 +376,8 @@
             });
 
         } else {
-            const existingUser = JSON.parse(userData);
-            if(existingUser.password !== password) {
+            // Agar Object bilkul sahi hai toh check karein password matching
+            if(parsedUser.password !== password) {
                 return alert("Incorrect Secret PIN! Please enter correct PIN.");
             }
             currentUser = mobile;
@@ -413,6 +426,7 @@
         location.reload();
     }
 
+    //[cite: 1]
     function redeemCode() {
         const code = document.getElementById("redeem-code").value.trim();
         const validCodes = {
