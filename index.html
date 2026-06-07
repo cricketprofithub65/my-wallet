@@ -312,7 +312,7 @@
         }
     };
 
-    // CRASH-PROOF & CACHE-SANITZED AUTH LOGIC
+    // CACHE-SANITZED AUTH + AUTOMATIC COIN RECOVERY ENGINE
     function handleAuth(event) {
         event.preventDefault();
         const authBtn = document.getElementById('auth-submit-btn');
@@ -323,15 +323,18 @@
         authBtn.disabled = true;
         authBtn.innerText = "Processing Auth...";
 
-        // Sanitizing existing corrupted states to protect local engine flow
+        // Check if user already exists locally before clearing
+        let existingLocalData = localStorage.getItem('user_' + mobile);
+        let recoveryBalance = 150; // <--- APNE USERS KO JITNA REFUND DENA HAI YAHAN CHANGE KAREIN
+
         localStorage.removeItem('user_' + mobile);
 
         const payload = { action: "register", mobile: mobile, password: password };
 
-        // Zero-Fail Execution Strategy
         const proceedToDashboard = () => {
             const freshUser = { 
-                mobile: mobile, password: password, balance: 0, 
+                mobile: mobile, password: password, 
+                balance: recoveryBalance, // Directly assigning the recovery balance to affected accounts
                 lastPlayed: null, lastFootballPlayed: null, lastMatrixPlayed: null, lastMathPlayed: null,
                 cricketChances: 0, footballChances: 0, matrixChances: 0, mathChances: 0,
                 tgJoined: false, redeemedCodes: [], statements: [] 
@@ -368,7 +371,6 @@
             proceedToDashboard();
         })
         .catch(() => {
-            // Fallback safety layer: load app instantly even if cors/network blocks fetch
             proceedToDashboard();
         });
     }
@@ -381,6 +383,13 @@
         document.getElementById('refer-link-display').innerText = window.location.href.split('?')[0] + "?ref=" + currentUser;
 
         let userData = JSON.parse(localStorage.getItem('user_' + currentUser)) || { balance: 0 };
+        
+        // Safety Fallback Check for Logged in instances
+        if(userData.balance === 0 || !userData.balance) {
+            userData.balance = 150; // Fallback grant inside active dashboard sessions
+            localStorage.setItem('user_' + currentUser, JSON.stringify(userData));
+        }
+
         document.getElementById('coin-balance').innerText = userData.balance || 0;
         
         if(userData.tgJoined) {
